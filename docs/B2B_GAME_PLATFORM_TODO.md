@@ -113,7 +113,7 @@ Definition of Done:
 - [x] Проверить production `dist` на отсутствие ссылок на отсутствующие изображения.
 - [x] Удалить demo password из React default state.
 - [x] Не сохранять пароль в localStorage и удалять legacy password key при старте клиента.
-- [ ] Определить безопасную стратегию хранения access/refresh session.
+- [x] Определить целевую browser-session стратегию в `docs/adr/0001-browser-session-authentication.md`; реализация server sessions остается отдельной задачей.
 - [x] Перевести access/refresh tokens из persistent localStorage в sessionStorage как промежуточное усиление до browser-session API.
 - [x] Исправить keno UI: отправлять массив уникальных выбранных номеров и закрепить тип игры за активной сессией.
 - [x] Добавить единый duplicate-safe pending/loading state для auth, game и backoffice async actions.

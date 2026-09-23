@@ -22,6 +22,7 @@
 - Текущий блок: route boundaries и вынос API orchestration в domain hooks/services.
 - Production deployment: не готов.
 - Real-money: вне scope первого релиза.
+- Browser authentication target: принят ADR 0001; backend implementation еще не начата.
 
 ---
 
@@ -212,6 +213,26 @@
 ### Следующий блок
 
 Вынести auth, catalog, gameplay и backoffice orchestration из `App.tsx` в domain hooks/services и зафиксировать browser-session authentication ADR.
+
+### Commit
+
+- Заполняется историей Git после публикации этого среза.
+
+---
+
+## 2026-09-23 — ADR browser-session authentication
+
+### Выполнено
+
+- Принят ADR 0001 для player, backoffice, B2B iframe и Partner API authentication.
+- Player/backoffice target определен как server-managed HttpOnly session cookie с CSRF/origin protection.
+- B2B game client target определен как одноразовый launch ticket и короткоживущий session-scoped credential.
+- Partner API authentication отделена в HMAC server-to-server контур.
+- `sessionStorage` явно зафиксирован только как переходное решение.
+
+### Следующий блок
+
+Вынести auth orchestration в отдельный domain hook/service, не расширяя зависимость от временного token storage; затем спроектировать backend browser-session storage model.
 
 ### Commit
 
