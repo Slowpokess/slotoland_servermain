@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Filter, Gamepad2, LogIn, Play, RefreshCcw, RotateCcw, Search, ServerCog, Shield, Sparkles, Trash2, UserPlus, WalletCards } from 'lucide-react';
+import { Filter, LogIn, RefreshCcw, RotateCcw, Search, ServerCog, Shield, UserPlus } from 'lucide-react';
+import { GamePanel } from '@/components/GamePanel';
 import { requestJson, HttpError, normalizeBase } from '@/lib/api';
 import { loadJson, loadNumber, loadSessionString, loadString, removeString, saveJson, saveSessionString, saveString } from '@/lib/storage';
 import { usePendingActions } from '@/lib/usePendingActions';
@@ -10,21 +11,6 @@ import type { ActivityItem } from '@/lib/types';
 const DEFAULT_API = import.meta.env.DEV ? 'http://localhost:8080' : window.location.origin;
 const DEFAULT_CLUB = 1;
 const QUICK_FILTERS = ['all', 'slot', 'keno', 'novomatic', 'netent', 'playngo', 'playtech', 'ct', 'megajack'];
-const SYMBOLS: Record<number, string> = {
-  1: 'A',
-  2: 'K',
-  3: 'Q',
-  4: 'J',
-  5: '10',
-  6: '9',
-  7: '7',
-  8: '★',
-  9: '♦',
-  10: '♣',
-  11: '♥',
-  12: '✦',
-};
-
 const STORAGE = {
   apiBase: 'slotopol.apiBase',
   email: 'slotopol.email',
@@ -70,15 +56,6 @@ function formatMoney(value: number): string {
 
 function normalizeText(value: string): string {
   return String(value || '').trim().toLowerCase();
-}
-
-function timeAgo(iso: string): string {
-  const seconds = Math.max(1, Math.round((Date.now() - Date.parse(iso)) / 1000));
-  if (seconds < 60) return `${seconds}s ago`;
-  const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.round(minutes / 60);
-  return `${hours}h ago`;
 }
 
 function normalizeScreen(screen: unknown): unknown[][] {
@@ -1025,107 +1002,29 @@ export function App() {
           </div>
         </section>
 
-        <section className="panel panel--game" id="game" aria-busy={gameBusy}>
-          <div className="panel__head">
-            <h2>Game</h2>
-            <span className="panel__hint">{sessionState}</span>
-          </div>
-
-          <div className="featured">
-            <div className="featured__art" aria-hidden="true">
-              <span>S</span>
-            </div>
-            <div className="featured__copy">
-              <div className="featured__title">{selectedGame ? `${selectedGame.Prov || '?'} / ${selectedGame.Name || '?'}` : 'Pick a game'}</div>
-              <div className="featured__meta">{selectedGameMeta}</div>
-            </div>
-          </div>
-
-          <div className="board-wrap">
-            <div className="board" style={{ gridTemplateColumns: boardWidth ? `repeat(${boardWidth}, minmax(0, 1fr))` : undefined }}>
-              {boardCells.length ? boardCells.flat().map((cell, index) => {
-                const numeric = typeof cell === 'number' ? cell : Number(cell);
-                const value = Number.isFinite(numeric) && SYMBOLS[numeric] ? SYMBOLS[numeric] : String(cell || '•');
-                return (
-                  <div className="cell" key={`${index}-${value}`}>{value}</div>
-                );
-              }) : (
-                <div className="empty-state" style={{ gridColumn: '1 / -1' }}>Open a game to render the board.</div>
-              )}
-            </div>
-          </div>
-
-          <div className="controls">
-            <label className="field">
-              <span>Bet</span>
-              <input value={bet} onChange={(event) => setBet(Number(event.target.value || 0))} type="number" min={0} step="0.01" />
-            </label>
-            {currentSession?.gameType === 'keno' ? (
-              <label className="field controls__wide-field">
-                <span>Keno numbers</span>
-                <input
-                  value={kenoPicks}
-                  onChange={(event) => setKenoPicks(event.target.value)}
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="1, 7, 14, 23"
-                />
-              </label>
-            ) : (
-              <>
-                <label className="field">
-                  <span>Lines / Sel</span>
-                  <input value={sel} onChange={(event) => setSel(Number(event.target.value || 0))} type="number" min={0} step={1} />
-                </label>
-                <label className="field">
-                  <span>Multiplier</span>
-                  <input value={mult} onChange={(event) => setMult(Number(event.target.value || 2))} type="number" min={2} step={1} />
-                </label>
-              </>
-            )}
-          </div>
-
-          <div className="actions actions--wide">
-            <button className="btn btn--primary" type="button" onClick={() => void runPending('game.open', openSelectedGame)} disabled={gameBusy}>
-              <Gamepad2 size={16} />
-              <span>{isPending('game.open') ? 'Opening…' : 'Open selected'}</span>
-            </button>
-            <button className="btn" type="button" onClick={() => void runPending('game.spin', spin)} disabled={gameBusy}>
-              <Play size={16} />
-              <span>{isPending('game.spin') ? 'Spinning…' : 'Spin'}</span>
-            </button>
-            <button className="btn" type="button" onClick={() => void runPending('game.double', doubleUp)} disabled={gameBusy}>
-              <Sparkles size={16} />
-              <span>{isPending('game.double') ? 'Doubling…' : 'Double'}</span>
-            </button>
-            <button className="btn" type="button" onClick={() => void runPending('game.collect', collect)} disabled={gameBusy}>
-              <WalletCards size={16} />
-              <span>{isPending('game.collect') ? 'Collecting…' : 'Collect'}</span>
-            </button>
-          </div>
-
-          <div className="ledger" id="activity">
-            <div className="ledger__head">
-              <h3>Activity</h3>
-              <button className="icon-btn" type="button" onClick={clearActivity} title="Clear activity">
-                <Trash2 size={16} />
-              </button>
-            </div>
-            <div className="ledger__body">
-              {activity.length ? activity.map((item) => (
-                <div key={`${item.at}-${item.title}`} className={`ledger-item ${item.tone === 'error' ? 'is-error' : item.tone === 'success' ? 'is-success' : ''}`}>
-                  <div className="ledger-item__top">
-                    <div className="mini-item__name">{item.title}</div>
-                    <div className="label">{timeAgo(item.at)}</div>
-                  </div>
-                  <div className="ledger-item__meta">{item.detail || item.kind}</div>
-                </div>
-              )) : (
-                <div className="empty-state">No activity yet.</div>
-              )}
-            </div>
-          </div>
-        </section>
+        <GamePanel
+          activity={activity}
+          bet={bet}
+          boardCells={boardCells}
+          boardWidth={boardWidth}
+          gameType={currentSession?.gameType}
+          kenoPicks={kenoPicks}
+          meta={selectedGameMeta}
+          mult={mult}
+          pending={{ any: gameBusy, collect: isPending('game.collect'), double: isPending('game.double'), open: isPending('game.open'), spin: isPending('game.spin') }}
+          sel={sel}
+          state={sessionState}
+          title={selectedGame ? `${selectedGame.Prov || '?'} / ${selectedGame.Name || '?'}` : 'Pick a game'}
+          onBetChange={setBet}
+          onClearActivity={clearActivity}
+          onCollect={() => void runPending('game.collect', collect)}
+          onDouble={() => void runPending('game.double', doubleUp)}
+          onKenoPicksChange={setKenoPicks}
+          onMultChange={setMult}
+          onOpen={() => void runPending('game.open', openSelectedGame)}
+          onSelChange={setSel}
+          onSpin={() => void runPending('game.spin', spin)}
+        />
 
         {backofficeRole !== 'none' && (
           <section className="panel panel--backoffice" id="backoffice" aria-busy={backofficeBusy}>
