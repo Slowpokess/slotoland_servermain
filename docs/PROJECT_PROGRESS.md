@@ -107,6 +107,31 @@
 
 ---
 
+## 2026-09-23 — декомпозиция Lobby и каталога
+
+### Выполнено
+
+- Lobby presentation вынесен в typed-компонент `LobbyPanel`.
+- Поиск, provider filters, quick filters, статистика и игровые карточки удалены из корневой JSX-разметки.
+- Форматирование alias, type, shape и RTP вынесено в общий модуль `gameCatalog`.
+- Одни и те же catalog helpers теперь используются контейнером и Lobby без дублирования.
+- Размер `App.tsx` уменьшен до 1024 строк.
+
+### Проверки
+
+- `npm run typecheck` — успешно.
+- `npm run build` — успешно.
+
+### Следующий блок
+
+Вынести Account presentation, затем Backoffice. После этого определить route-level shell для player и operator зон.
+
+### Commit
+
+- Заполняется историей Git после публикации этого среза.
+
+---
+
 ## 2026-09-23 — первый срез декомпозиции frontend
 
 ### Выполнено

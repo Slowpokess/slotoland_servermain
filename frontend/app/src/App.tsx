@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Filter, LogIn, RefreshCcw, RotateCcw, Search, ServerCog, Shield, UserPlus } from 'lucide-react';
+import { LogIn, RefreshCcw, RotateCcw, Search, ServerCog, Shield, UserPlus } from 'lucide-react';
 import { GamePanel } from '@/components/GamePanel';
+import { LobbyPanel } from '@/components/LobbyPanel';
 import { requestJson, HttpError, normalizeBase } from '@/lib/api';
+import { gameAlias, gameShape, gameTypeLabel, normalizeText, renderRtpLabel } from '@/lib/gameCatalog';
 import { loadJson, loadNumber, loadSessionString, loadString, removeString, saveJson, saveSessionString, saveString } from '@/lib/storage';
 import { usePendingActions } from '@/lib/usePendingActions';
 import type { ApiRequestOptions } from '@/lib/api';
@@ -25,37 +27,8 @@ const STORAGE = {
 
 const LEGACY_SECRET_STORAGE_KEY = 'slotopol.secret';
 
-function gameAlias(game: GameInfo): string {
-  return `${normalizeText(game.Prov || game.prov || '')}/${normalizeText(game.Name || game.name || '')}`;
-}
-
-function gameTypeLabel(game: GameInfo): string {
-  const gt = Number(game.GT || game.GP || 0);
-  if (gt === 2) return 'keno';
-  if (gt === 1) return 'slot';
-  return 'game';
-}
-
-function gameShape(game: GameInfo): string {
-  const sx = Number(game.SX || 0);
-  const sy = Number(game.SY || 0);
-  return sx && sy ? `${sx}x${sy}` : 'shape n/a';
-}
-
-function renderRtpLabel(game: GameInfo): string {
-  const rtp = game.RTP || [];
-  if (!Array.isArray(rtp) || !rtp.length) return '';
-  const first = Number(rtp[0]).toFixed(2);
-  const last = Number(rtp[rtp.length - 1]).toFixed(2);
-  return first === last ? `${first}% RTP` : `${first}%-${last}% RTP`;
-}
-
 function formatMoney(value: number): string {
   return Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function normalizeText(value: string): string {
-  return String(value || '').trim().toLowerCase();
 }
 
 function normalizeScreen(screen: unknown): unknown[][] {
@@ -912,95 +885,21 @@ export function App() {
           </div>
         </section>
 
-        <section className="panel panel--lobby" id="lobby">
-          <div className="panel__head">
-            <h2>Lobby</h2>
-            <span className="panel__hint">{gameCount}</span>
-          </div>
-
-          <div className="search-row">
-            <label className="field field--inline">
-              <span>Search</span>
-              <div className="search-input">
-                <Search size={15} />
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  type="search"
-                  placeholder="Provider, game, alias"
-                />
-              </div>
-            </label>
-
-            <label className="field field--inline">
-              <span>Filter</span>
-              <div className="search-input">
-                <Filter size={15} />
-                <select value={providerFilter} onChange={(event) => setProviderFilter(event.target.value)}>
-                  {providerOptions.map((provider) => (
-                    <option key={provider} value={provider}>{provider}</option>
-                  ))}
-                </select>
-              </div>
-            </label>
-          </div>
-
-          <div className="chips">
-            {QUICK_FILTERS.map((filter) => (
-              <button
-                key={filter}
-                className={`chip ${providerFilter === filter ? 'is-active' : ''}`}
-                type="button"
-                onClick={() => setProviderFilter(filter)}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-
-          <div className="stats">
-            <div className="stat">
-              <div className="label">Algorithms</div>
-              <div className="value">{algCount}</div>
-            </div>
-            <div className="stat">
-              <div className="label">Providers</div>
-              <div className="value">{provCount}</div>
-            </div>
-            <div className="stat">
-              <div className="label">Selected</div>
-              <div className="value">{selectedGame ? `${selectedGame.Prov || '?'} / ${selectedGame.Name || '?'}` : 'None'}</div>
-            </div>
-          </div>
-
-          <div className="game-grid">
-            {filteredGames.length ? filteredGames.map((game) => {
-              const alias = gameAlias(game);
-              const selected = alias === selectedAlias;
-              return (
-                <button
-                  key={alias}
-                  className={`game-card ${selected ? 'is-selected' : ''}`}
-                  type="button"
-                  onClick={() => selectGame(game)}
-                >
-                  <div className="game-card__title">{game.Name || game.name || alias}</div>
-                  <div className="game-card__meta">{game.Prov || game.prov || 'Unknown provider'}</div>
-                  <div className="game-card__meta">{gameShape(game)} · {gameTypeLabel(game)} · {renderRtpLabel(game)}</div>
-                  <div className="game-card__chips">
-                    <span className="chip chip--soft">{gameTypeLabel(game)}</span>
-                    <span className="chip chip--soft">{gameShape(game)}</span>
-                    {(game.RTP || []).slice(0, 2).map((value: number) => (
-                      <span key={`${alias}-${value}`} className="chip chip--soft">{Number(value).toFixed(2)}%</span>
-                    ))}
-                  </div>
-                </button>
-              );
-            }) : (
-              <div className="empty-state">No games match the current filter.</div>
-            )}
-          </div>
-        </section>
+        <LobbyPanel
+          algorithmCount={algCount}
+          filteredGames={filteredGames}
+          gameCount={gameCount}
+          providerFilter={providerFilter}
+          providerOptions={providerOptions}
+          providerCount={provCount}
+          quickFilters={QUICK_FILTERS}
+          search={search}
+          selectedAlias={selectedAlias}
+          selectedGame={selectedGame}
+          onProviderFilterChange={setProviderFilter}
+          onSearchChange={setSearch}
+          onSelectGame={selectGame}
+        />
 
         <GamePanel
           activity={activity}
