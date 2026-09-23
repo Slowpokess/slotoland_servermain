@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slotopol - Играть в слоты</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .game-selector {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .game-selector h3 {
+            margin-bottom: 15px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-box input, .search-box select {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .game-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .game-item:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .game-item.selected {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .auth-section {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .auth-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .game-screen {
+            display: none;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .game-screen.active {
+            display: block;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .balance {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .slot-machine {
+            background: linear-gradient(135deg, #2d1b4e 0%, #1a1a2e 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .reels-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .reel {
+            background: white;
+            border-radius: 10px;
+            width: 80px;
+            height: 240px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .reel.spinning .symbol {
+            animation: spin 0.1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .symbol {
+            font-size: 3em;
+            transition: all 0.3s;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .bet-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+
+        .bet-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .spin-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.3em;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            transition: all 0.3s;
+        }
+
+        .spin-btn:hover:not(:disabled) {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.6);
+        }
+
+        .spin-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .message {
+            text-align: center;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .message.win {
+            background: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        
+        .message.lose {
+            background: rgba(244, 67, 54, 0.3);
+            color: #f44336;
+
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .win-display {
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-top: 10px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎰 Slotopol Casino</h1>
+            <p>Выберите игру и начните выигрывать!</p>
+        </div>
+
+        <!-- Выбор игры -->
+        <div class="game-selector">
+            <h3>🎮 Выберите игру</h3>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Поиск игры...">
+                <select id="gameTypeFilter">
+                    <option value="all">Все типы</option>
+                    <option value="slot">Слоты</option>
+                    <option value="keno">Keno</option>
+                </select>
+            </div>
+            <div class="games-grid" id="gamesGrid">
+                <div class="loading">Загрузка игр...</div>
+            </div>
+        </div>
+
+        <!-- Авторизация -->
+        <div class="auth-section" id="authSection">
+            <h3>👤 Вход или регистрация</h3>
+            <div class="auth-form">
+                <div class="form-group">
+                    <label>Логин</label>
+                    <input type="text" id="loginInput" placeholder="Введите логин">
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="passwordInput" placeholder="Введите пароль">
+                </div>
+                <button class="btn btn-primary" onclick="signIn()">Войти</button>
+                <button class="btn btn-success" onclick="signUp()">Регистрация</button>
+            </div>
+            <div class="message" id="authMessage" style="margin-top: 10px;"></div>
+        </div>
+
+        <!-- Экран игры -->
+        <div class="game-screen" id="gameScreen">
+            <div class="game-info">
+                <div>
+                    <h2 id="currentGameName">Выберите игру</h2>
+                    <p id="currentGameProvider"></p>
+                </div>
+                <div class="balance">
+                    💰 Баланс: $<span id="balanceAmount">0.00</span>
+                </div>
+            </div>
+
+            <div class="slot-machine">
+                <div class="reels-container" id="reelsContainer">
+                    <!-- Барабаны будут здесь -->
+                </div>
+
+                <div class="controls">
+                    <div class="bet-controls">
+                        <button class="bet-btn" onclick="changeBet(-10)">-</button>
+                        <span>Ставка: $<span id="betAmount">10</span></span>
+                        <button class="bet-btn" onclick="changeBet(10)">+</button>
+                    </div>
+                    <button class="spin-btn" id="spinBtn" onclick="spin()" disabled>🎰 КРУТИТЬ</button>
+                    <button class="btn btn-success" onclick="collectWin()" id="collectBtn" style="display: none;">✓ ЗАБРАТЬ</button>
+                </div>
+
+                <div class="message" id="gameMessage"></div>
+                <div class="win-display" id="winDisplay"></div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="backToSelection()">← Вернуться к выбору игр</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let allGames = [];
+        let currentGame = null;
+        let accessToken = null;
+        let refreshToken = null;
+        let balance = 0;
+        let currentBet = 10;
+        let gameActive = false;
+        let pendingWin = 0;
+
+        // Символы для демонстрации
+        const SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '🍉', '⭐', '💎', '7️⃣', '🔔', '🍀'];
+
+        // Загрузка игр
+        window.onload = async () => {
+            await loadGames();
+        };
+
+        async function loadGames() {
+            try {
+                const response = await fetch(`${API_BASE}/game/info`);
+                const games = await response.json();
+                allGames = games.filter(g => g.type === 'slot'); // Только слоты
+                displayGames(allGames);
+            } catch (error) {
+                console.error('Error loading games:', error);
+                document.getElementById('gamesGrid').innerHTML =
+                    '<p style="color: #f44336;">Ошибка загрузки игр</p>';
+            }
+        }
+
+        function displayGames(games) {
+            const grid = document.getElementById('gamesGrid');
+            grid.innerHTML = '';
+
+            games.forEach(game => {
+                const item = document.createElement('div');
+                item.className = 'game-item';
+                item.onclick = () => selectGame(game);
+
+                const rtp = game.rtp && game.rtp.length > 0 ? game.rtp[0].toFixed(1) + '%' : 'N/A';
+
+                item.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 5px;">${game.name}</div>
+                    <div style="font-size: 0.8em; opacity: 0.8;">${game.provider}</div>
+                    <div style="font-size: 0.8em; margin-top: 5px;">RTP: ${rtp}</div>
+                `;
+
+                grid.appendChild(item);
+            });
+        }
+
+        function selectGame(game) {
+            currentGame = game;
+
+            // Подсветка выбранной игры
+            document.querySelectorAll('.game-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+
+            document.getElementById('currentGameName').textContent = game.name;
+            document.getElementById('currentGameProvider').textContent = game.provider;
+
+            // Создаем барабаны
+            createReels();
+
+            // Показываем экран игры
+            document.getElementById('gameScreen').classList.add('active');
+            document.querySelector('.game-selector').style.display = 'none';
+
+            // Активируем кнопку если есть токен
+            if (accessToken) {
+                document.getElementById('spinBtn').disabled = false;
+            }
+        }
+
+        function createReels() {
+            const container = document.getElementById('reelsContainer');
+            const reelsCount = currentGame.reels || 5;
+            container.innerHTML = '';
+
+            for (let i = 0; i < reelsCount; i++) {
+                const reel = document.createElement('div');
+                reel.className = 'reel';
+                reel.id = `reel-${i}`;
+                reel.innerHTML = '<span class="symbol">❓</span>';
+                container.appendChild(reel);
+            }
+        }
+
+        function backToSelection() {
+            document.getElementById('gameScreen').classList.remove('active');
+            document.querySelector('.game-selector').style.display = 'block';
+        }
+
+        // Авторизация
+        async function signIn() {
+            const login = document.getElementById('loginInput').value;
+            const password = document.getElementById('passwordInput').value;
+
+            if (!login || !password) {
+                showAuthMessage('Введите логин и пароль', 'lose');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/signin`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        login: login,
+                        pass: password
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    accessToken = data.access;
+                    refreshToken = data.refresh;
+                    balance = data.bal || 1000; // Стартовый баланс
+
+                    updateBalance();
+                    showAuthMessage('✅ Успешный вход!', 'win');
+                    document.getElementById('authSection').style.display = 'none';
+
+                    if (currentGame) {
+                        document.getElementById('spinBtn').disabled = false;
+                    }
+                } else {
+                    const error = await response.json();
+                    showAuthMessage(`❌ ${error.what || 'Ошибка входа'}`, 'lose');
+                }
+            } catch (error) {
+                console.error('Sign in error:', error);
+                showAuthMessage('❌ Ошибка соединения', 'lose');
+            }
+        }
+
+        async function signUp() {
+            const login = document.getElementById('loginInput').value;
+            const password = document.getElementById('passwordInput').value;
+
+            if (!login || !password) {
+                showAuthMessage('Введите логин и пароль', 'lose');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        login: login,
+                        pass: password
+                    })
+                });
+
+                if (response.ok) {
+                    showAuthMessage('✅ Регистрация успешна! Теперь войдите.', 'win');
+                } else {
+                    const error = await response.json();
+                    showAuthMessage(`❌ ${error.what || 'Ошибка регистрации'}`, 'lose');
+                }
+            } catch (error) {
+                console.error('Sign up error:', error);
+                showAuthMessage('❌ Ошибка соединения', 'lose');
+            }
+        }
+
+        function showAuthMessage(msg, type) {
+            const msgEl = document.getElementById('authMessage');
+            msgEl.textContent = msg;
+            msgEl.className = `message ${type}`;
+        }
+
+        function updateBalance() {
+            document.getElementById('balanceAmount').textContent = balance.toFixed(2);
+        }
+
+        function changeBet(amount) {
+            const newBet = currentBet + amount;
+            if (newBet >= 10 && newBet <= balance) {
+                currentBet = newBet;
+                document.getElementById('betAmount').textContent = currentBet;
+            }
+        }
+
+        async function spin() {
+            if (!accessToken) {
+                showGameMessage('Сначала войдите в систему!', 'lose');
+                return;
+            }
+
+            if (currentBet > balance) {
+                showGameMessage('Недостаточно средств!', 'lose');
+                return;
+            }
+
+            document.getElementById('spinBtn').disabled = true;
+            showGameMessage('🎰 Вращение...', '');
+            gameActive = true;
+
+            // Анимация вращения
+            const reels = document.querySelectorAll('.reel');
+            reels.forEach(reel => reel.classList.add('spinning'));
+
+            // Симуляция запроса к API
+            try {
+                // Демонстрация - случайные символы
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                reels.forEach(reel => reel.classList.remove('spinning'));
+
+                // Генерируем случайный результат
+                const result = generateRandomResult();
+                displayResult(result);
+
+                // Расчет выигрыша (демонстрация)
+                const win = calculateWin(result);
+                balance -= currentBet;
+
+                if (win > 0) {
+                    pendingWin = win;
+                    showGameMessage(`🎉 Выигрыш: $${win.toFixed(2)}!`, 'win');
+                    document.getElementById('winDisplay').textContent = `💰 $${win.toFixed(2)}`;
+                    document.getElementById('collectBtn').style.display = 'inline-block';
+                    document.getElementById('spinBtn').style.display = 'none';
+                } else {
+                    showGameMessage('Попробуйте еще раз!', 'lose');
+                    document.getElementById('winDisplay').textContent = '';
+                }
+
+                updateBalance();
+            } catch (error) {
+                console.error('Spin error:', error);
+                showGameMessage('Ошибка вращения', 'lose');
+                reels.forEach(reel => reel.classList.remove('spinning'));
+            }
+
+            gameActive = false;
+            if (pendingWin === 0) {
+                document.getElementById('spinBtn').disabled = false;
+            }
+        }
+
+        function generateRandomResult() {
+            const reels = document.querySelectorAll('.reel');
+            const result = [];
+
+            reels.forEach(() => {
+                const randomIndex = Math.floor(Math.random() * SYMBOLS.length);
+                result.push(SYMBOLS[randomIndex]);
+            });
+
+            return result;
+        }
+
+        function displayResult(result) {
+            const reels = document.querySelectorAll('.reel');
+            reels.forEach((reel, index) => {
+                reel.innerHTML = `<span class="symbol">${result[index]}</span>`;
+            });
+        }
+
+        function calculateWin(result) {
+            // Простая логика выигрыша для демонстрации
+            // В реальной игре это делается на сервере
+
+            // Проверяем все одинаковые
+            const allSame = result.every(symbol => symbol === result[0]);
+            if (allSame) {
+                return currentBet * 10; // Джекпот!
+            }
+
+            // Проверяем 3+ одинаковых подряд
+            let maxCount = 1;
+            let currentCount = 1;
+
+            for (let i = 1; i < result.length; i++) {
+                if (result[i] === result[i-1]) {
+                    currentCount++;
+                    maxCount = Math.max(maxCount, currentCount);
+                } else {
+                    currentCount = 1;
+                }
+            }
+
+            if (maxCount >= 3) {
+                return currentBet * maxCount;
+            }
+
+            // Проверяем на драгоценные символы
+            const specialSymbols = result.filter(s => s === '💎' || s === '7️⃣' || s === '⭐');
+            if (specialSymbols.length >= 3) {
+                return currentBet * specialSymbols.length;
+            }
+
+            return 0;
+        }
+
+        function collectWin() {
+            if (pendingWin > 0) {
+                balance += pendingWin;
+                pendingWin = 0;
+                updateBalance();
+                showGameMessage('✅ Выигрыш забран!', 'win');
+                document.getElementById('winDisplay').textContent = '';
+                document.getElementById('collectBtn').style.display = 'none';
+                document.getElementById('spinBtn').style.display = 'inline-block';
+                document.getElementById('spinBtn').disabled = false;
+            }
+        }
+
+        function showGameMessage(msg, type) {
+            const msgEl = document.getElementById('gameMessage');
+            msgEl.textContent = msg;
+            msgEl.className = `message ${type}`;
+        }
+
+        // Поиск игр
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = allGames.filter(game =>
+                game.name.toLowerCase().includes(query) ||
+                game.provider.toLowerCase().includes(query)
+            );
+            displayGames(filtered);
+        });
+
+        // Фильтр по типу
+        document.getElementById('gameTypeFilter').addEventListener('change', (e) => {
+            const type = e.target.value;
+            if (type === 'all') {
+                displayGames(allGames);
+            } else {
+                const filtered = allGames.filter(g => g.type === type);
+                displayGames(filtered);
+            }
+        });
+    </script>
+</body>
+</html>
+

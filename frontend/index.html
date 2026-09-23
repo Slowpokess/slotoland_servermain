@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slotopol Client</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <img src="../docs/logo.webp" alt="Slotopol logo" class="brand__logo">
+        <div class="brand__copy">
+          <div class="brand__name">Slotopol</div>
+          <div class="brand__sub">Client Shell</div>
+        </div>
+      </div>
+      <div class="topbar__meta">
+        <div class="badge" id="serverBadge">Server: unknown</div>
+        <div class="badge badge--accent" id="authBadge">Signed out</div>
+        <button class="icon-btn" id="pingBtn" type="button" title="Refresh server status">↻</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="panel panel--auth">
+        <div class="panel__head">
+          <h2>Account</h2>
+          <span class="panel__hint" id="accountHint">Local first</span>
+        </div>
+
+        <label class="field">
+          <span>API base</span>
+          <input id="apiBase" type="text" spellcheck="false">
+        </label>
+
+        <div class="split">
+          <label class="field">
+            <span>Email</span>
+            <input id="email" type="email" spellcheck="false" autocomplete="username">
+          </label>
+          <label class="field">
+            <span>Password</span>
+            <input id="secret" type="password" autocomplete="current-password">
+          </label>
+        </div>
+
+        <div class="split">
+          <label class="field">
+            <span>Name</span>
+            <input id="name" type="text" spellcheck="false" autocomplete="nickname">
+          </label>
+          <label class="field">
+            <span>Club</span>
+            <input id="clubId" type="number" min="1" step="1">
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn--primary" id="signinBtn" type="button">Sign in</button>
+          <button class="btn" id="signupBtn" type="button">Sign up</button>
+          <button class="btn" id="refreshBtn" type="button">Refresh</button>
+        </div>
+
+        <div class="account-card">
+          <div class="account-card__title">Profile</div>
+          <div class="account-card__grid">
+            <div>
+              <div class="label">UID</div>
+              <div class="value" id="uidValue">-</div>
+            </div>
+            <div>
+              <div class="label">Wallet</div>
+              <div class="value" id="walletValue">0</div>
+            </div>
+            <div>
+              <div class="label">Access</div>
+              <div class="value" id="accessValue">-</div>
+            </div>
+            <div>
+              <div class="label">mRTP</div>
+              <div class="value" id="mrtpValue">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mini-list" id="profileList"></div>
+      </section>
+
+      <section class="panel panel--lobby">
+        <div class="panel__head">
+          <h2>Lobby</h2>
+          <span class="panel__hint" id="gameCount">0 games</span>
+        </div>
+
+        <div class="search-row">
+          <label class="field field--inline">
+            <span>Search</span>
+            <input id="search" type="search" placeholder="Provider, game, alias">
+          </label>
+          <label class="field field--inline">
+            <span>Filter</span>
+            <select id="providerFilter">
+              <option value="all">All</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="chips" id="quickFilters"></div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="label">Algorithms</div>
+            <div class="value" id="algCount">-</div>
+          </div>
+          <div class="stat">
+            <div class="label">Providers</div>
+            <div class="value" id="provCount">-</div>
+          </div>
+          <div class="stat">
+            <div class="label">Selected</div>
+            <div class="value" id="selectedGameLabel">None</div>
+          </div>
+        </div>
+
+        <div class="game-grid" id="gameGrid"></div>
+      </section>
+
+      <section class="panel panel--game">
+        <div class="panel__head">
+          <h2>Game</h2>
+          <span class="panel__hint" id="sessionState">No session</span>
+        </div>
+
+        <div class="featured">
+          <img src="../docs/slotopol.webp" alt="Slotopol art" class="featured__art">
+          <div class="featured__copy">
+            <div class="featured__title" id="gameTitle">Pick a game</div>
+            <div class="featured__meta" id="gameMeta">Open a session from the lobby.</div>
+          </div>
+        </div>
+
+        <div class="board-wrap">
+          <div class="board" id="board"></div>
+        </div>
+
+        <div class="controls">
+          <label class="field">
+            <span>Bet</span>
+            <input id="bet" type="number" min="0" step="0.01" value="1">
+          </label>
+          <label class="field">
+            <span>Lines / Sel</span>
+            <input id="sel" type="number" min="0" step="1" value="1">
+          </label>
+          <label class="field">
+            <span>Multiplier</span>
+            <input id="mult" type="number" min="2" step="1" value="2">
+          </label>
+        </div>
+
+        <div class="actions actions--wide">
+          <button class="btn btn--primary" id="openGameBtn" type="button">Open selected</button>
+          <button class="btn" id="spinBtn" type="button">Spin</button>
+          <button class="btn" id="doubleBtn" type="button">Double</button>
+          <button class="btn" id="collectBtn" type="button">Collect</button>
+        </div>
+
+        <div class="ledger">
+          <div class="ledger__head">
+            <h3>Activity</h3>
+            <button class="icon-btn" id="clearLogBtn" type="button" title="Clear activity">×</button>
+          </div>
+          <div class="ledger__body" id="activityLog"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

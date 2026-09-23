@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slotopol - Галерея слотов (251 игра)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .stats {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-around;
+            color: white;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .controls {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .controls h3 {
+            margin-bottom: 15px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .search-box button {
+            padding: 12px 30px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+
+        .search-box button:hover {
+            background: #45a049;
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: rgba(255,255,255,0.3);
+            border-color: white;
+        }
+
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .slot-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .slot-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .slot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .slot-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            flex: 1;
+        }
+
+        .slot-provider {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.75em;
+            margin-left: 10px;
+        }
+
+        .slot-type {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 0.7em;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
+        .type-slot {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .type-keno {
+            background: #FF9800;
+            color: white;
+        }
+
+        .slot-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-size: 0.75em;
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .info-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .slot-properties {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .prop-tag {
+            display: inline-block;
+            background: #2196F3;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            margin: 2px;
+        }
+
+        .slot-rtp {
+            background: #fff3e0;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .slot-rtp .label {
+            font-size: 0.8em;
+            color: #e65100;
+            margin-bottom: 5px;
+        }
+
+        .slot-rtp .value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #bf360c;
+        }
+
+        .details-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .details-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.5em;
+            padding: 50px;
+        }
+
+        .error {
+            background: #f44336;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            margin: auto;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5em;
+            line-height: 1;
+            z-index: 10;
+        }
+
+        .modal-title {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #333;
+            padding-right: 50px;
+        }
+
+        .modal-section {
+            margin-bottom: 25px;
+        }
+
+        .modal-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .game-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .info-row strong {
+            color: #667eea;
+        }
+
+        .properties-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .prop-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .volatility-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .vol-low { background: #4CAF50; }
+        .vol-medium { background: #FF9800; }
+        .vol-high { background: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎰 Slotopol Server</h1>
+            <p>Галерея слот-игр с реальным API</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalGames">-</div>
+                <div class="stat-label">Всего игр</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalSlots">-</div>
+                <div class="stat-label">Слоты</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalKeno">-</div>
+                <div class="stat-label">Keno</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalProviders">-</div>
+                <div class="stat-label">Провайдеров</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <h3>🔍 Поиск и фильтры</h3>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Поиск по названию или провайдеру...">
+                <button onclick="searchGames()">Найти</button>
+            </div>
+            <div class="filter-section">
+                <button class="filter-btn active" onclick="filterByType('all')">Все</button>
+                <button class="filter-btn" onclick="filterByType('slot')">Слоты</button>
+                <button class="filter-btn" onclick="filterByType('keno')">Keno</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Загрузка данных с сервера...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div class="slots-grid" id="slotsGrid"></div>
+    </div>
+
+    <!-- Модальное окно с детальной информацией -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <h2 class="modal-title" id="modalTitle">Название игры</h2>
+
+            <div class="modal-section">
+                <h3>📊 Основная информация</h3>
+                <div class="game-info" id="gameInfo"></div>
+            </div>
+
+            <div class="modal-section">
+                <h3>🎯 Особенности игры</h3>
+                <div class="properties-grid" id="propertiesGrid"></div>
+            </div>
+
+            <div class="modal-section">
+                <h3>💰 RTP (Return to Player)</h3>
+                <div id="rtpInfo"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let allGames = [];
+        let currentFilter = 'all';
+
+        // Загрузка данных при старте
+        window.onload = async () => {
+            await loadGameData();
+        };
+
+        async function loadGameData() {
+            try {
+                const response = await fetch(`${API_BASE}/game/info`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                allGames = data;
+
+                updateStats();
+                displayGames(allGames);
+
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                console.error('Error loading games:', error);
+                showError(`Ошибка загрузки: ${error.message}`);
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function updateStats() {
+            const slots = allGames.filter(g => g.type === 'slot');
+            const keno = allGames.filter(g => g.type === 'keno');
+            const providers = new Set(allGames.map(g => g.provider));
+
+            document.getElementById('totalGames').textContent = allGames.length;
+            document.getElementById('totalSlots').textContent = slots.length;
+            document.getElementById('totalKeno').textContent = keno.length;
+            document.getElementById('totalProviders').textContent = providers.size;
+        }
+
+        function displayGames(games) {
+            const grid = document.getElementById('slotsGrid');
+            grid.innerHTML = '';
+
+            games.forEach(game => {
+                const card = createSlotCard(game);
+                grid.appendChild(card);
+            });
+        }
+
+        function createSlotCard(game) {
+            const card = document.createElement('div');
+            card.className = 'slot-card';
+            card.onclick = () => showGameDetails(game);
+
+            const typeClass = game.type === 'slot' ? 'type-slot' : 'type-keno';
+            const typeLabel = game.type === 'slot' ? 'SLOT' : 'KENO';
+
+            // RTP display
+            let rtpDisplay = 'N/A';
+            if (game.rtp && game.rtp.length > 0) {
+                rtpDisplay = game.rtp.map(r => r.toFixed(2) + '%').join(', ');
+            }
+
+            // Volatility badge
+            const volClass = game.volatility === 'low' ? 'vol-low' :
+                            game.volatility === 'medium' ? 'vol-medium' : 'vol-high';
+            const volLabel = game.volatility === 'low' ? 'Низкая' :
+                            game.volatility === 'medium' ? 'Средняя' : 'Высокая';
+
+            // Properties preview
+            const propsPreview = game.properties && game.properties.length > 0
+                ? game.properties.slice(0, 5).map(p => `<span class="prop-tag">${p}</span>`).join('')
+                : '<span style="color: #999;">Нет особых свойств</span>';
+
+            // Grid size
+            const gridSize = game.reels && game.rows
+                ? `${game.reels}x${game.rows}`
+                : (game.reels ? `${game.reels} барабанов` : 'N/A');
+
+            card.innerHTML = `
+                <div class="slot-header">
+                    <div class="slot-name">
+                        ${game.name}
+                        <span class="slot-type ${typeClass}">${typeLabel}</span>
+                    </div>
+                    <div class="slot-provider">${game.provider}</div>
+                </div>
+                <div class="slot-info">
+                    <div class="info-item">
+                        <div class="info-label">Размер</div>
+                        <div class="info-value">${gridSize}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Линии/Способы</div>
+                        <div class="info-value">${game.lines || game.ways || 'N/A'}</div>
+                    </div>
+                </div>
+                <div class="slot-rtp">
+                    <div class="label">RTP: <span class="volatility-badge ${volClass}">${volLabel}</span></div>
+                    <div class="value">${rtpDisplay}</div>
+                </div>
+                <div class="slot-properties">
+                    ${propsPreview}
+                </div>
+                <button class="details-btn">📋 Подробнее</button>
+            `;
+
+            return card;
+        }
+
+        function showGameDetails(game) {
+            document.getElementById('modalTitle').textContent = game.name;
+
+            // Game type
+            const typeLabel = game.type === 'slot' ? 'Слот' : 'Keno';
+
+            // Grid size
+            const gridSize = game.reels && game.rows
+                ? `${game.reels}x${game.rows}`
+                : (game.reels ? `${game.reels}` : 'N/A');
+
+            // Lines/Ways
+            const linesWays = game.lines ? `${game.lines} линий`
+                            : game.ways ? `${game.ways} способов`
+                            : 'N/A';
+
+            // Volatility badge
+            const volClass = game.volatility === 'low' ? 'vol-low' :
+                            game.volatility === 'medium' ? 'vol-medium' : 'vol-high';
+            const volLabel = game.volatility === 'low' ? 'Низкая' :
+                            game.volatility === 'medium' ? 'Средняя' : 'Высокая';
+
+            document.getElementById('gameInfo').innerHTML = `
+                <div class="info-row">
+                    <span>Провайдер:</span>
+                    <strong>${game.provider}</strong>
+                </div>
+                <div class="info-row">
+                    <span>Тип игры:</span>
+                    <strong>${typeLabel}</strong>
+                </div>
+                <div class="info-row">
+                    <span>Размер поля:</span>
+                    <strong>${gridSize}</strong>
+                </div>
+                <div class="info-row">
+                    <span>Линии/Способы:</span>
+                    <strong>${linesWays}</strong>
+                </div>
+                <div class="info-row">
+                    <span>Волатильность:</span>
+                    <strong><span class="volatility-badge ${volClass}">${volLabel}</span></strong>
+                </div>
+                <div class="info-row">
+                    <span>Бонусные игры:</span>
+                    <strong>${game.bonuses || 0}</strong>
+                </div>
+            `;
+
+            // Properties
+            if (game.properties && game.properties.length > 0) {
+                document.getElementById('propertiesGrid').innerHTML =
+                    game.properties.map(p => `<span class="prop-badge">${p}</span>`).join('');
+            } else {
+                document.getElementById('propertiesGrid').innerHTML =
+                    '<p style="color: #999;">Нет особых свойств</p>';
+            }
+
+            // RTP
+            if (game.rtp && game.rtp.length > 0) {
+                const avgRtp = game.rtp.reduce((a, b) => a + b, 0) / game.rtp.length;
+                document.getElementById('rtpInfo').innerHTML = `
+                    <p><strong>Средний RTP:</strong> ${avgRtp.toFixed(2)}%</p>
+                    <p><strong>Доступные RTP:</strong> ${game.rtp.map(r => r.toFixed(2) + '%').join(', ')}</p>
+                    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+                        RTP ${avgRtp.toFixed(2)}% означает, что в долгосрочной перспективе игрок возвращает
+                        ${avgRtp.toFixed(2)}% от сделанных ставок.
+                    </p>
+                `;
+            } else {
+                document.getElementById('rtpInfo').innerHTML = '<p>RTP не указан</p>';
+            }
+
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        function searchGames() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allGames.filter(game =>
+                game.name.toLowerCase().includes(query) ||
+                game.provider.toLowerCase().includes(query)
+            );
+            displayGames(filtered);
+        }
+
+        function filterByType(type) {
+            currentFilter = type;
+
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            let filtered;
+            if (type === 'all') {
+                filtered = allGames;
+            } else {
+                filtered = allGames.filter(g => g.type === type);
+            }
+
+            displayGames(filtered);
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Close modal on outside click
+        window.onclick = (event) => {
+            const modal = document.getElementById('modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        // Search on Enter
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchGames();
+            }
+        });
+    </script>
+</body>
+</html>

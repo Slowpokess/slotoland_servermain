@@ -1,0 +1,104 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: slotopol-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${SLOTOPOL_PG_DB:-slotopol}
+      POSTGRES_USER: ${SLOTOPOL_PG_USER:-slotopol}
+      POSTGRES_PASSWORD: ${SLOTOPOL_PG_PASSWORD:?set SLOTOPOL_PG_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${SLOTOPOL_PG_USER:-slotopol} -d ${SLOTOPOL_PG_DB:-slotopol}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - slotopol-net
+
+  slotopol:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: slotopol-server:prod
+    container_name: slotopol-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SLOTOPOL_CFGFILE: /app/deploy/slot-app.prod.yaml
+      SLOTOPOL_DBDRIVER: postgres
+      SLOTOPOL_CLUBDSN: "host=postgres port=5432 user=${SLOTOPOL_PG_USER:-slotopol} password=${SLOTOPOL_PG_PASSWORD:?set SLOTOPOL_PG_PASSWORD} dbname=${SLOTOPOL_PG_DB:-slotopol} sslmode=disable"
+      SLOTOPOL_SPINDSN: "host=postgres port=5432 user=${SLOTOPOL_PG_USER:-slotopol} password=${SLOTOPOL_PG_PASSWORD:?set SLOTOPOL_PG_PASSWORD} dbname=${SLOTOPOL_PG_DB:-slotopol} sslmode=disable"
+      SLOTOPOL_ACCESS_KEY: ${SLOTOPOL_ACCESS_KEY:?set SLOTOPOL_ACCESS_KEY}
+      SLOTOPOL_REFRESH_KEY: ${SLOTOPOL_REFRESH_KEY:?set SLOTOPOL_REFRESH_KEY}
+      SLOTOPOL_BREVO_API_KEY: ${SLOTOPOL_BREVO_API_KEY:-}
+    entrypoint: ["./slot-server"]
+    command: ["-v", "web"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/readyz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    networks:
+      - slotopol-net
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: slotopol-server:prod
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SLOTOPOL_CFGFILE: /app/deploy/slot-app.prod.yaml
+      SLOTOPOL_DBDRIVER: postgres
+      SLOTOPOL_CLUBDSN: "host=postgres port=5432 user=${SLOTOPOL_PG_USER:-slotopol} password=${SLOTOPOL_PG_PASSWORD:?set SLOTOPOL_PG_PASSWORD} dbname=${SLOTOPOL_PG_DB:-slotopol} sslmode=disable"
+      SLOTOPOL_SPINDSN: "host=postgres port=5432 user=${SLOTOPOL_PG_USER:-slotopol} password=${SLOTOPOL_PG_PASSWORD:?set SLOTOPOL_PG_PASSWORD} dbname=${SLOTOPOL_PG_DB:-slotopol} sslmode=disable"
+      SLOTOPOL_ACCESS_KEY: ${SLOTOPOL_ACCESS_KEY:?set SLOTOPOL_ACCESS_KEY}
+      SLOTOPOL_REFRESH_KEY: ${SLOTOPOL_REFRESH_KEY:?set SLOTOPOL_REFRESH_KEY}
+      SLOTOPOL_BREVO_API_KEY: ${SLOTOPOL_BREVO_API_KEY:-}
+    entrypoint: ["./slot-server"]
+    command: ["migrate", "--config", "/app/deploy/slot-app.prod.yaml", "--path", "/app/migrations/postgres"]
+    profiles:
+      - tools
+    networks:
+      - slotopol-net
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx-runtime
+    image: slotopol-nginx:prod
+    container_name: slotopol-nginx
+    restart: unless-stopped
+    depends_on:
+      slotopol:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./deploy/tls:/etc/nginx/tls:ro
+    networks:
+      - slotopol-net
+
+networks:
+  slotopol-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local

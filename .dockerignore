@@ -1,0 +1,70 @@
+# Git
+.git
+.gitignore
+.github
+
+# Documentation
+*.md
+docs
+LICENSE
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Data and databases
+*.sqlite
+*.db
+data/
+sql/
+backups/
+
+# Local configuration and credentials
+.env
+deploy/prod.env
+deploy/tls/*.pem
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+.cache/
+.gocache/
+.gotmp/
+.gomodcache/
+
+# Build artifacts
+slot-server
+slot-server.exe
+*.exe
+
+# Node (for frontend)
+node_modules/
+npm-debug.log
+http-server.js
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/

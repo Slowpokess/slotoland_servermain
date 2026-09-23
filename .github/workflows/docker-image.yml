@@ -1,0 +1,36 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check deployment scripts
+      run: bash -n deploy/*.sh
+    - name: Validate production Compose
+      run: docker compose -f docker-compose.prod.yml --env-file deploy/prod.env.example config --quiet
+    - name: Validate Nginx configuration
+      run: |
+        tls_dir="$(mktemp -d)"
+        trap 'rm -rf "$tls_dir"' EXIT
+        openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+          -subj '/CN=localhost' \
+          -keyout "$tls_dir/privkey.pem" \
+          -out "$tls_dir/fullchain.pem"
+        docker run --rm \
+          -v "$PWD/deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro" \
+          -v "$tls_dir:/etc/nginx/tls:ro" \
+          nginx:1.27-alpine nginx -t
+    - name: Build the Docker image
+      run: |
+        docker build . --file Dockerfile --target runtime --tag slotopol/server:${{ github.sha }}
+        docker build . --file Dockerfile --target nginx-runtime --tag slotopol/nginx:${{ github.sha }}

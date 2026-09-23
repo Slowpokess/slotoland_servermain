@@ -1,0 +1,2 @@
+# Put fullchain.pem and privkey.pem here for the Nginx production deployment.
+# Real certificate and key files are ignored by Git.

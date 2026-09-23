@@ -1,0 +1,312 @@
+
+# Slots server
+
+[![GitHub release][1]][2]
+[![Hits-of-Code][3]][4]
+
+[1]: https://img.shields.io/github/v/release/slotopol/server.svg
+[2]: https://github.com/slotopol/server/releases/latest
+[3]: https://hitsofcode.com/github/slotopol/server?branch=main
+[4]: https://hitsofcode.com/github/slotopol/server/view?branch=main
+
+![slotopol-server](docs/logo.webp)
+
+Slots games server. Releases functionality for AGT, Novomatic, NetEnt, BetSoft, and some others providers of slot games. Has built-in reels scanner and the sets of reels on different RTP for each game.
+
+Server provides HTTP-based API for popular slots and have well-optimized performance for thousands requests per second. Can be deployed on dedicated server or as portable application for Linux or Windows.
+
+```text
+total: 251 games, 135 algorithms, 11 providers
+AGT: 64 games
+Aristocrat: 6 games
+BetSoft: 3 games
+CT Interactive: 50 games
+IGT: 5 games
+Megajack: 4 games
+NetEnt: 22 games
+Novomatic: 85 games
+Play'n GO: 3 games
+Playtech: 7 games
+Slotopol: 2 games
+```
+
+*Last added games*:
+
+* '[Guardian of Asgard](https://www.slotsmate.com/software/ct-interactive/guardian-of-asgard)' CT Interactive 5x3 cluster cascade videoslot
+* '[Zeus](https://agtsoftware.org/games/agt/zeus)' AGT 4x4 videoslot
+* '[Bloody Princess](https://www.slotsmate.com/software/ct-interactive/bloody-princess)' CT Interactive 5x3 videoslot (alias to "Champagne" game of Megajack)
+* '[Champagne and Fruits](https://www.slotsmate.com/software/ct-interactive/champagne-and-fruits)' CT Interactive 5x3 videoslot (remake "Champagne" game of Megajack)
+* '[Wild Horses](https://www.slotsmate.com/software/novomatic/wild-horses)' Novomatic 5x4 videoslot
+* '[Hot Chance](https://www.slotsmate.com/software/novomatic/hot-chance)' Novomatic 3x3 videoslot
+* '[Lord of Fortune](https://www.slotsmate.com/software/ct-interactive/lord-of-fortune)' CT Interactive 5x3 videoslot
+* '[Halloween Hot](https://www.slotsmate.com/software/ct-interactive/halloween-hot)' CT Interactive 5x3 videoslot
+* '[Mighty Rex](https://www.slotsmate.com/software/ct-interactive/mighty-rex)' CT Interactive 5x3 videoslot
+* '[Bavarian Forest](https://www.slotsmate.com/software/ct-interactive/bavarian-forest)' CT Interactive 5x3 videoslot
+* '[Ocean Legends](https://www.slotsmate.com/software/ct-interactive/ocean-legends)' CT Interactive 5x3 videoslot
+* '[Fortune Fish](https://www.slotsmate.com/software/ct-interactive/fortune-fish)' CT Interactive 5x3 videoslot
+* '[Cherry Crown](https://www.slotsmate.com/software/ct-interactive/cherry-crown)' CT Interactive 5x3 videoslot
+* '[Satyr and Nymph](https://www.slotsmate.com/software/ct-interactive/satyr-and-nymph)' CT Interactive 5x3 videoslot
+* '[Money Pipe](https://www.slotsmate.com/software/ct-interactive/money-pipe)' CT Interactive 5x4 videoslot
+* '[Ice Rubies](https://www.slotsmate.com/software/ct-interactive/ice-rubies)' CT Interactive 5x4 videoslot
+* '[More Dragons](https://www.slotsmate.com/software/ct-interactive/more-dragons)' CT Interactive 5x4 videoslot
+* '[Colibri Wild](https://www.slotsmate.com/software/ct-interactive/colibri-wild)' CT Interactive 5x4 videoslot
+* '[Shining Treasures](https://www.slotsmate.com/software/ct-interactive/shining-treasures)' CT Interactive 5x3 videoslot
+* '[Full of Luck](https://www.slotsmate.com/software/ct-interactive/full-of-luck)' CT Interactive 5x3 videoslot
+
+*Top-10 of games with most interesting algorithms released on server*:
+
+* 'Aztec Gold' Megajack 5x3 videoslot has unique 'Aztec Pyramid' bonus game
+* '[Book of Ra Deluxe](https://www.slotsmate.com/software/novomatic/book-of-ra-deluxe)' Novomatic 5x3 videoslot with special expanding symbol on free games
+* '[Gonzo's Quest](https://www.slotsmate.com/software/netent/gonzos-quest)' NetEnt 5x3 cascade videoslot
+* '[Fruit Shop](https://www.slotsmate.com/software/netent/fruit-shop)' NetEnt 5x3 videoslot with free spins on every win
+* '[Sun City](https://agtsoftware.com/games/agt/suncity)' AGT 5x3 videoslot with free games continous by the luck
+* '[Egypt](https://agtsoftware.com/games/agt/egypt)' AGT 5x3 videoslot with minislot for wilds multiplier
+* 'Fire Joker' Play'n GO 5x3 videoslot with jackpot on lined pays and big symbols on free games
+* '[Secret Elixir](https://www.slotsmate.com/software/novomatic/secret-elixir)' Novomatic 5x3 videoslot with multipliers on 5th reel
+* '[Vikings Fun](https://www.slotsmate.com/software/ct-interactive/vikings-fun)' CT Interactive 5x3 videoslot, some symbols become wilds on free games
+* '[Ultra Sevens](https://www.slotsmate.com/software/novomatic/ultra-sevens)' Novomatic 5x4 videoslot with 3 jackpots
+
+## How to build from sources
+
+*Note: you can download the compiled binaries for Windows at [release](https://github.com/slotopol/server/releases/latest) section, or build docker image by [dockerfile](https://github.com/slotopol/server/blob/main/Dockerfile), or use compiled image from [docker hub](https://hub.docker.com/r/schwarzlichtbezirk/slotopol): `docker pull schwarzlichtbezirk/slotopol` and start image [as it described](docs/docker-config.md).*
+
+1. Install [Golang](https://go.dev/dl/) of last version and GCC toolchain *(tip: for Windows it can be MinGW-w64 distribution from [WinLibs](https://winlibs.com/))*.
+2. Clone project and download dependencies.
+3. Build project with script at `task` directory.
+
+Project can be [built](.github/workflows/go.yml) for Windows/Linux/MacOS.
+
+For Windows command prompt:
+
+```cmd
+git clone https://github.com/slotopol/server.git
+cd server
+go mod download && go mod verify
+task\build-win-x64.cmd
+```
+
+or for Linux shell or git bash:
+
+```sh
+git clone https://github.com/slotopol/server.git
+cd server
+go mod download && go mod verify
+sudo chmod +x ./task/*.sh
+./task/build-linux-x64.sh
+```
+
+Then web-service can be started:
+
+```cmd
+slot_win_x64 -v web
+```
+
+The [list of all](docs/list-all.md) provided games can be obtained by command:
+
+```cmd
+slot_win_x64 list
+```
+
+To find out the list of available RTPs can be with command like this
+
+```cmd
+slot_win_x64 list -i megajack --rtp
+```
+
+See `slot_win_x64 list -h` with full list of available command line parameters for list-command with filters.
+
+## How to test workflow
+
+Build [bot](https://github.com/slotopol/bot) as it described, and run some scripts at `script` folder of project. See [readme](https://github.com/slotopol/bot/blob/main/README.md) for details.
+
+## Architecture and logic
+
+**Database.** Service instance oriented on monopoly usage of it's database. It reads necessary database tables on start and avoids any `select` requests at all. Then it stores to database only changes and new data (`update` & `insert`). Those queries are buffered across API endpoints calls to increase performance with database conversations.
+
+It can be used embedded *sqlite* database engine, or *MySQL*, or *PostgreSQL* databases, its configured at `slot-app.yaml` settings file, and by default sqlite is used. Embedded sqlite engine useful for instance started on portable storage, such as flash drive or external SSD, and can serve small sets of players, 50-500 players at the same time. For big number of players it can be used dedicated server with MySQL or PostgreSQL on fast hosted disk.
+
+**Clubs.** There is can be served several clubs. Each club have its own undepended bank, jackpot fund with rate to this fund from spins, and deposit. Bank of club is current balance of club to which arrives coins from users spins, and from which they gets a wins. There is exist linkage of users wins to bank: if bank have not enough coins to pay the win during users spins, this win combination will be skipped. Deposit of club does not used in games, it can be useful to transfer the coins from bank to fix the yield.
+
+**Users accounts.** Accounts have registrations data only. Each account can be associated with several clubs. Each user can have properties for each club with individual balance to gamble, individual access rights, and individual master RTP to choose reels at games.
+
+Each user can play several games at the same time. Each started game have game ID related to user ID and club ID. Any game actions ties to game ID.
+
+## How to use HTTP API
+
+Any API endpoints can receive data in JSON, XML, YAML, or TOML format, depended by `Content-Type` header. If `Content-Type` header not given, JSON will be used to decode as default. `Accept` header if it given, defines response data format. If it absent, same format as at request will be used.
+
+In most cases used `POST`-method of HTTP.
+
+If any response have HTTP status >= 400, body in this case contains error object with `what` field with message and unique source point error `code`.
+
+### Without authorization
+
+First of all you can test replies existence and service is running:
+
+```sh
+curl -i localhost:8080/ping
+```
+
+Any riplies have `Server` header with content like `slotopol/v0.10.0 (windows; amd64)`. By prefix `slotopol/` you can detect that service is our.
+
+Then you can get a list of games supported by server. This call can be without authorization.
+
+```sh
+curl -X GET localhost:8080/game/algs
+```
+
+Response has array with available algorithms descriptions. Each structure has a list of games aliases, that shares one algorithm. Field `rtp` has the list of reels with predefined RTP. There is example of structure with info:
+
+```json
+,{"aliases":[{"prov":"NetEnt","name":"Trolls","year":2009},{"prov":"NetEnt","name":"Excalibur","year":2013},{"prov":"NetEnt","name":"Pandora's Box","year":2009},{"prov":"NetEnt","name":"Wild Witches","year":2010}],"gt":1,"gp":4628497,"sx":5,"sy":3,"sn":14,"ln":20,"rtp":[87.788791,89.230191,91.925079,93.061471,93.903358,95.183523,96.6485,98.193276,101.929305,110.298257]},
+```
+
+To get filtered list of games can be used call like
+
+```sh
+curl -X GET localhost:8080/game/list?inc=megajack+ct
+```
+
+Where `inc` contains space separated list of filters like in `list` command line parameters, see `slot_win_x64 list -h` for details.
+
+`/signis`, `/sendcode`, `/activate`, `/signup` and `/signin` endpoints also does not expects authorization.
+
+### Authorization
+
+Basic authorization and bearer authorization (with JWT-tokens) are supported.
+Production authorization is accepted only through the `Authorization` header;
+query parameters, cookies and POST-form token fallbacks are not enabled.
+
+**Basic** expects credentials pair `email:password` encoded in unpadded base64 encoding for URL (see RFC 4648).
+
+**Bearer** works with two HS256 JWT tokens - access token and refresh token. Access token should be provided in all cases except `refresh` call. When access-token expires, it should be replaced to refresh-token for refresh-call.
+
+In `/signin` call password should be provided explicitly in the `secret` field over HTTPS/TLS.
+
+* Sign-in, and use token from response with any followed calls.
+
+```sh
+export EMAIL="player@example.org"
+export SECRET="<local-demo-secret>"
+curl -H "Content-Type: application/json" -d "{\"email\":\"$EMAIL\",\"secret\":\"$SECRET\"}" -X POST localhost:8080/signin
+```
+
+Use the `access` token returned by `/signin` and replace `{{token}}` in the samples below with that runtime token.
+The same response also contains `refresh`, which is used only with `/refresh`.
+
+* When your access token expires (you can get response with 401 status code), use refresh-call with refresh-token to get new tokens pair.
+
+```sh
+curl -H "Content-Type: application/json" -H "Authorization: Bearer {{token}}" -X GET localhost:8080/refresh
+```
+
+### Create and play the game
+
+* Create new game. GID received at response will be used at all calls for access to this game instance. The response includes initial session state, current game object, and user balance at this club.
+
+```sh
+curl -H "Content-Type: application/json" -H "Authorization: Bearer {{token}}" -d '{"cid":1,"uid":3,"alias":"Novomatic/Joker Dolphin"}' -X POST localhost:8080/game/new
+```
+
+Endpoint receives `alias` identifier to game that represents as concatenation of provider name and game name with slash. For example, `NetEnt/Tiki Wonders`. Whole list of all supported games can be obtained by [list](docs/list-all.md) command. Identifier turns to lowercase without spaces.
+
+* Change number of selected bet lines.
+
+```sh
+curl -H "Content-Type: application/json" -H "Authorization: Bearer {{token}}" -d '{"gid":1,"sel":5}' -X POST localhost:8080/slot/sel/set
+```
+
+* Make a spin. Spin returns `sid` - spin ID, by this ID it can be found at the log; `state` - current scene state; `screen` with new symbols after spin; `wins` with list of win on each line if it was; `fs` - free spins remained; `gain` - total gain after spin, that can be gambled on double up; `wallet` - user balance after spin with won coins.
+
+```sh
+curl -H "Content-Type: application/json" -H "Authorization: Bearer {{token}}" -d '{"gid":1}' -X POST localhost:8080/slot/spin
+```
+
+At parameters can be also given new bet value and number of selected lines, if there is no free spins now. So, data at the query can be seen such as `{"gid":1,"bet":2,"sel":5}`. Its can be useful for conversations only by spin-queries.
+
+* Double-up. If presents `gain` after spin, it can be multiplied by gamble. `mult` at argument is multiplier, and it will be `2` for red-black cards game. Returned `state` shows current scene state, `gain` will be multiplied on win, and zero on lose. `wallet` represents new balance of user.
+
+```sh
+curl -H "Content-Type: application/json" -H "Authorization: Bearer {{token}}" -d '{"gid":1,"mult":2}' -X POST localhost:8080/slot/doubleup
+```
+
+* Collect the gain. After win on spin, or after double-up gain can be collected. Response includes current `state` and cleared `gain`. In most cases it will be collected automatically on new spin.
+
+```sh
+curl -H "Content-Type: application/json" -H "Authorization: Bearer {{token}}" -d '{"gid":1}' -X POST localhost:8080/slot/collect
+```
+
+* Get information about opened game. Recivies GID. Response has alias, game state, last spin ID, user ID, club ID, game object, and user balance at this club.
+
+```sh
+curl -H "Content-Type: application/json" -H "Authorization: Bearer {{token}}" -d '{"gid":1}' -X POST localhost:8080/game/info
+```
+
+### Work with user account
+
+* Check up user account existence. It can be done by email or user identifier (`uid` parameter). Call returns true `uid` and `email` if account is found, or zero user identifier if account does not registered.
+
+```sh
+curl -X GET localhost:8080/signis?email=rob@example.org
+```
+
+* Register new user. E-mail and secret key (password) are expected, name can be omitted. Receives user ID on success.
+
+```sh
+curl -H "Content-Type: application/json" -d '{"email":"rob@example.org","secret":"<local-secret>","name":"rob"}' -X POST localhost:8080/signup
+```
+
+After registration new user account expects account activation by code sent to user email. Activation can be done by `/activate` endpoint call. If registration of new user was done with admin token, this new user account does not expects activation.
+
+* Activate new user account. It can be done by code sent to user account email. Activation should be done in 15 minutes timeout after registration. If timeout expired activation can be done with new code, sent to email by `/sendcode` endpoint call.
+
+```sh
+curl -X GET localhost:8080/activate?uid=3&code=048814
+```
+
+Instead `uid` parameter with user identifier can be used user `email`. If activation endpoint was called with admin token, activation code have no matter.
+
+* Send new activation code to user email.
+
+```sh
+curl -X GET localhost:8080/sendcode?uid=3
+```
+
+Instead `uid` parameter with user identifier can be used user `email`.
+
+* Rename user.
+
+Response status is `204 No Content` when rename succeeds.
+
+```sh
+curl -H "Content-Type: application/json" -H "Authorization: Bearer {{token}}" -d '{"uid":3,"name":"erigone"}' -X POST localhost:8080/user/rename
+```
+
+* Change secret key.
+
+Response status is `204 No Content` when secret change succeeds.
+
+```sh
+curl -H "Content-Type: application/json" -H "Authorization: Bearer {{token}}" -d '{"uid":3,"oldsecret":"<old-local-secret>","newsecret":"<new-local-secret>"}' -X POST localhost:8080/user/secret
+```
+
+* Delete user. Delete-call removes account from database, moves remained user's coins to deposit, and removes all users games from database. Response includes `wallets` map with club wallet balances that were present at deletion time.
+
+```sh
+curl -H "Content-Type: application/json" -H "Authorization: Bearer {{token}}" -d '{"uid":3,"secret":"<local-secret>"}' -X POST localhost:8080/user/delete
+```
+
+## Internal project docs
+
+For current internal assessment and roadmap, see:
+
+- [Project Status](docs/PROJECT_STATUS.md)
+- [Development Direction](docs/DEVELOPMENT_DIRECTION.md)
+- [Block Backlog](docs/BLOCK_BACKLOG.md)
+- [Real-Money Transition](docs/REAL_MONEY_TRANSITION.md)
+- [Technical Audit](docs/TECH_AUDIT.md)
+- [MVP Roadmap](docs/MVP_ROADMAP.md)
+- [Worklog](docs/WORKLOG.md)
+
+---
+(c) schwarzlichtbezirk, 2024-2025.

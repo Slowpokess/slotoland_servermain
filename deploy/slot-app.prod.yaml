@@ -1,0 +1,25 @@
+# Production deployment defaults.
+# Secrets and database DSNs are supplied through environment variables.
+
+authentication:
+  access-ttl: 24h
+  refresh-ttl: 72h
+  nonce-timeout: 2m30s
+
+activation:
+  use-activation: false
+
+web-server:
+  trusted-proxies:
+    - 172.16.0.0/12
+  shutdown-timeout: 15s
+
+database:
+  driver-name: postgres
+  auto-sync: false
+  use-spin-log: true
+
+gameplay:
+  adjunct-limit: 100000
+  min-jackpot: 10000
+  max-spin-attempts: 300

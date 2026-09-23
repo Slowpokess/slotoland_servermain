@@ -1,0 +1,103 @@
+services:
+  # Slotopol Game Server
+  slotopol:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: slotopol-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - slotopol-data:/app/data
+    environment:
+      - SLOTOPOL_DBDRIVER=sqlite3
+      - SLOTOPOL_CLUBDSN=/app/data/slot-club.sqlite
+      - SLOTOPOL_SPINDSN=/app/data/slot-spin.sqlite
+      - SLOTOPOL_USE_SPIN_LOG=true
+    restart: unless-stopped
+    networks:
+      - slotopol-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/readyz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Nginx reverse proxy for production
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: slotopol-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - slotopol
+  #   restart: unless-stopped
+  #   networks:
+  #     - slotopol-net
+
+  # Optional: MySQL database (instead of SQLite)
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: slotopol-mysql
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: rootpassword
+  #     MYSQL_DATABASE: slotopol
+  #     MYSQL_USER: slotopol
+  #     MYSQL_PASSWORD: slotopolpassword
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql-data:/var/lib/mysql
+  #   restart: unless-stopped
+  #   networks:
+  #     - slotopol-net
+
+  # Optional: PostgreSQL database (instead of SQLite)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: slotopol-postgres
+  #   environment:
+  #     POSTGRES_DB: slotopol
+  #     POSTGRES_USER: slotopol
+  #     POSTGRES_PASSWORD: slotopolpassword
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - slotopol-net
+
+  # Optional: phpMyAdmin for MySQL management
+  # phpmyadmin:
+  #   image: phpmyadmin/phpmyadmin
+  #   container_name: slotopol-phpmyadmin
+  #   environment:
+  #     PMA_HOST: mysql
+  #     PMA_PORT: 3306
+  #     PMA_USER: root
+  #     PMA_PASSWORD: rootpassword
+  #   ports:
+  #     - "8081:80"
+  #   depends_on:
+  #     - mysql
+  #   restart: unless-stopped
+  #   networks:
+  #     - slotopol-net
+
+networks:
+  slotopol-net:
+    driver: bridge
+
+volumes:
+  slotopol-data:
+    driver: local
+  mysql-data:
+    driver: local
+  postgres-data:
+    driver: local

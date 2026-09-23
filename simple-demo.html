@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Slot Demo</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #1a1a2e;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .game {
+            background: #2a2a4a;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+        }
+        .screen {
+            display: grid;
+            grid-template-columns: repeat(5, 80px);
+            gap: 10px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .cell {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        .cell.winning {
+            background: #ffd700;
+            animation: pulse 0.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        button {
+            padding: 15px 40px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .spin { background: #ff4444; color: white; }
+        .collect { background: #4CAF50; color: white; }
+        .login-box {
+            text-align: center;
+            padding: 20px;
+        }
+        input {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+        }
+        #message {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .error { background: #ff4444; }
+        .success { background: #4CAF50; }
+    </style>
+</head>
+<body>
+    <div class="game" id="game">
+        <h2 style="text-align:center;">🎰 SLOT DEMO</h2>
+
+        <div id="message" style="display:none;"></div>
+
+        <div id="loginSection" class="login-box">
+            <h3>Вход</h3>
+            <input type="email" id="email" placeholder="Email" value="test@example.org" style="width: 250px;"><br>
+            <input type="password" id="password" placeholder="Пароль" value="test123" style="width: 250px;"><br>
+            <button class="spin" onclick="login()">Войти</button>
+            <button class="collect" onclick="register()">Регистрация</button>
+        </div>
+
+        <div id="gameSection" style="display:none;">
+            <div class="screen" id="screen"></div>
+
+            <div class="info">
+                <div>💰 Баланс: <span id="wallet">0</span></div>
+                <div>🎰 Выигрыш: <span id="win">0</span></div>
+            </div>
+
+            <div style="text-align:center;">
+                <button class="spin" onclick="spin()" id="spinBtn">КРУТИТЬ</button>
+                <button class="collect" onclick="collect()" id="collectBtn" disabled>СОБРАТЬ</button>
+                <button class="collect" onclick="logout()">ВЫХОД</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'http://localhost:8080';
+        const symbols = {'1':'🍒','2':'🍋','3':'🍊','4':'🍇','5':'💎','6':'7️⃣','7':'🔔','8':'⭐','9':'🐬','10':'🌊','11':'🐠','12':'🦈'};
+        let token, gid, wallet;
+
+        function showMsg(text, type) {
+            const m = document.getElementById('message');
+            m.textContent = text;
+            m.className = type;
+            m.style.display = 'block';
+            setTimeout(() => m.style.display = 'none', 3000);
+        }
+
+        async function register() {
+            try {
+                const r = await fetch(API+'/signup', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        secret: document.getElementById('password').value,
+                        name: 'Player'
+                    })
+                });
+                const d = await r.json();
+                if(r.ok) { showMsg('✅ Зарегистрировано! Теперь войдите.', 'success'); }
+                else { showMsg('❌ '+d.what, 'error'); }
+            } catch(e) { showMsg('❌ Ошибка: '+e.message, 'error'); }
+        }
+
+        async function login() {
+            try {
+                const r = await fetch(API+'/signin', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        secret: document.getElementById('password').value
+                    })
+                });
+                const d = await r.json();
+                if(r.ok) {
+                    token = d.access;
+                    localStorage.setItem('token', token);
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('gameSection').style.display = 'block';
+                    await createGame();
+                } else {
+                    showMsg('❌ '+d.what, 'error');
+                }
+            } catch(e) { showMsg('❌ Проверьте, что сервер запущен на порту 8080', 'error'); }
+        }
+
+        async function createGame() {
+            try {
+                const r = await fetch(API+'/game/new', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer '+token
+                    },
+                    body: JSON.stringify({
+                        cid: 1,
+                        uid: 1,
+                        alias: 'Novomatic/Joker Dolphin'
+                    })
+                });
+                const d = await r.json();
+                if(r.ok) {
+                    gid = d.gid;
+                    wallet = d.wallet;
+                    render(d.game.screen);
+                    updateInfo();
+                } else {
+                    showMsg('❌ '+d.what, 'error');
+                }
+            } catch(e) { showMsg('❌ '+e.message, 'error'); }
+        }
+
+        function render(screen) {
+            const div = document.getElementById('screen');
+            div.innerHTML = '';
+            screen.forEach(row => row.forEach(s => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = symbols[s] || s;
+                div.appendChild(cell);
+            }));
+        }
+
+        function updateInfo() {
+            document.getElementById('wallet').textContent = wallet.toFixed(2);
+        }
+
+        async function spin() {
+            const btn = document.getElementById('spinBtn');
+            btn.disabled = true;
+            btn.textContent = '🎲';
+
+            try {
+                const r = await fetch(API+'/slot/spin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer '+token
+                    },
+                    body: JSON.stringify({gid})
+                });
+                const d = await r.json();
+                if(r.ok) {
+                    render(d.screen);
+                    wallet = d.wallet;
+                    updateInfo();
+                    document.getElementById('win').textContent = d.gain.toFixed(2);
+                    document.getElementById('collectBtn').disabled = d.gain <= 0;
+
+                    if(d.gain > 0) showMsg('🎉 Выигрыш: '+d.gain, 'success');
+                } else {
+                    showMsg('❌ '+d.what, 'error');
+                }
+            } catch(e) { showMsg('❌ '+e.message, 'error'); }
+            finally { btn.disabled = false; btn.textContent = 'КРУТИТЬ'; }
+        }
+
+        async function collect() {
+            try {
+                const r = await fetch(API+'/slot/collect', {
+                    method: 'POST',
+                    headers: {'Authorization': 'Bearer '+token},
+                    body: JSON.stringify({gid})
+                });
+                const d = await r.json();
+                if(r.ok) {
+                    wallet = d.wallet;
+                    updateInfo();
+                    document.getElementById('win').textContent = '0';
+                    document.getElementById('collectBtn').disabled = true;
+                }
+            } catch(e) {}
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            location.reload();
+        }
+
+        window.onload = () => {
+            const t = localStorage.getItem('token');
+            if(t) {
+                token = t;
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('gameSection').style.display = 'block';
+                createGame();
+            }
+        };
+    </script>
+</body>
+</html>
