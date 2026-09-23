@@ -116,7 +116,7 @@ Definition of Done:
 - [ ] Определить безопасную стратегию хранения access/refresh session.
 - [x] Перевести access/refresh tokens из persistent localStorage в sessionStorage как промежуточное усиление до browser-session API.
 - [x] Исправить keno UI: отправлять массив уникальных выбранных номеров и закрепить тип игры за активной сессией.
-- [ ] Добавить loading/disabled state на все async actions.
+- [x] Добавить единый duplicate-safe pending/loading state для auth, game и backoffice async actions.
 - [x] Добавить global error boundary с безопасным recovery state.
 - [x] Убрать ввод произвольного API base из production player UI, сохранив его только для Vite dev mode.
 

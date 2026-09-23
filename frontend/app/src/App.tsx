@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Filter, Gamepad2, LogIn, Play, RefreshCcw, RotateCcw, Search, ServerCog, Shield, Sparkles, Trash2, UserPlus, WalletCards } from 'lucide-react';
 import { requestJson, HttpError, normalizeBase } from '@/lib/api';
 import { loadJson, loadNumber, loadSessionString, loadString, removeString, saveJson, saveSessionString, saveString } from '@/lib/storage';
+import { usePendingActions } from '@/lib/usePendingActions';
 import type { ApiRequestOptions } from '@/lib/api';
 import type { AuthResponse, BackofficeAuditEntry, BackofficeLedgerEntry, BackofficeRole, BackofficeSession, BackofficeUser, GameCatalogResponse, GameInfo, GameSession, PropResponse, SessionResponse, UserListResponse, WalletResponse } from '@/lib/types';
 import type { ActivityItem } from '@/lib/types';
@@ -126,6 +127,7 @@ function parseKenoSelections(value: string): number[] {
 }
 
 export function App() {
+  const { isPending, runPending } = usePendingActions();
   const [apiBase, setApiBase] = useState(loadString(STORAGE.apiBase, DEFAULT_API));
   const [email, setEmail] = useState(loadString(STORAGE.email, 'player@example.org'));
   const [secret, setSecret] = useState('');
@@ -722,6 +724,9 @@ export function App() {
     { label: 'Access', value: String(access) },
     { label: 'mRTP', value: String(mrtp) },
   ];
+  const authBusy = isPending('auth.signin', 'auth.signup', 'auth.refresh', 'auth.secret');
+  const gameBusy = isPending('game.open', 'game.spin', 'game.double', 'game.collect');
+  const backofficeBusy = isPending('backoffice.search', 'backoffice.user', 'backoffice.mutate');
 
   return (
     <div className="app-shell">
@@ -743,7 +748,14 @@ export function App() {
             <Shield size={14} />
             <span>{authLabel}</span>
           </div>
-          <button className="icon-btn" type="button" onClick={refreshClick} title="Refresh server and session state">
+          <button
+            className="icon-btn"
+            type="button"
+            onClick={() => void runPending('auth.refresh', refreshClick)}
+            title="Refresh server and session state"
+            disabled={authBusy}
+            aria-busy={isPending('auth.refresh')}
+          >
             <RefreshCcw size={16} />
           </button>
         </div>
@@ -807,7 +819,7 @@ export function App() {
       </section>
 
       <main className="workspace">
-        <section className="panel panel--auth" id="profile">
+        <section className="panel panel--auth" id="profile" aria-busy={authBusy}>
           <div className="panel__head">
             <h2>Account</h2>
             <span className="panel__hint">{accountHint}</span>
@@ -843,17 +855,17 @@ export function App() {
           </div>
 
           <div className="actions">
-            <button className="btn btn--primary" type="button" onClick={signIn}>
+            <button className="btn btn--primary" type="button" onClick={() => void runPending('auth.signin', signIn)} disabled={authBusy}>
               <LogIn size={16} />
-              <span>Sign in</span>
+              <span>{isPending('auth.signin') ? 'Signing in…' : 'Sign in'}</span>
             </button>
-            <button className="btn" type="button" onClick={signUp}>
+            <button className="btn" type="button" onClick={() => void runPending('auth.signup', signUp)} disabled={authBusy}>
               <UserPlus size={16} />
-              <span>Sign up</span>
+              <span>{isPending('auth.signup') ? 'Signing up…' : 'Sign up'}</span>
             </button>
-            <button className="btn" type="button" onClick={refreshClick}>
+            <button className="btn" type="button" onClick={() => void runPending('auth.refresh', refreshClick)} disabled={authBusy}>
               <RotateCcw size={16} />
-              <span>Refresh</span>
+              <span>{isPending('auth.refresh') ? 'Refreshing…' : 'Refresh'}</span>
             </button>
           </div>
 
@@ -901,9 +913,9 @@ export function App() {
               </label>
             </div>
             <div className="actions">
-              <button className="btn btn--primary" type="button" onClick={changeSecret}>
+              <button className="btn btn--primary" type="button" onClick={() => void runPending('auth.secret', changeSecret)} disabled={authBusy}>
                 <Shield size={16} />
-                <span>Update secret</span>
+                <span>{isPending('auth.secret') ? 'Updating…' : 'Update secret'}</span>
               </button>
               <div className="mini-note">
                 The backend enforces the current secret unless the account has admin access.
@@ -1013,7 +1025,7 @@ export function App() {
           </div>
         </section>
 
-        <section className="panel panel--game" id="game">
+        <section className="panel panel--game" id="game" aria-busy={gameBusy}>
           <div className="panel__head">
             <h2>Game</h2>
             <span className="panel__hint">{sessionState}</span>
@@ -1074,21 +1086,21 @@ export function App() {
           </div>
 
           <div className="actions actions--wide">
-            <button className="btn btn--primary" type="button" onClick={openSelectedGame}>
+            <button className="btn btn--primary" type="button" onClick={() => void runPending('game.open', openSelectedGame)} disabled={gameBusy}>
               <Gamepad2 size={16} />
-              <span>Open selected</span>
+              <span>{isPending('game.open') ? 'Opening…' : 'Open selected'}</span>
             </button>
-            <button className="btn" type="button" onClick={spin}>
+            <button className="btn" type="button" onClick={() => void runPending('game.spin', spin)} disabled={gameBusy}>
               <Play size={16} />
-              <span>Spin</span>
+              <span>{isPending('game.spin') ? 'Spinning…' : 'Spin'}</span>
             </button>
-            <button className="btn" type="button" onClick={doubleUp}>
+            <button className="btn" type="button" onClick={() => void runPending('game.double', doubleUp)} disabled={gameBusy}>
               <Sparkles size={16} />
-              <span>Double</span>
+              <span>{isPending('game.double') ? 'Doubling…' : 'Double'}</span>
             </button>
-            <button className="btn" type="button" onClick={collect}>
+            <button className="btn" type="button" onClick={() => void runPending('game.collect', collect)} disabled={gameBusy}>
               <WalletCards size={16} />
-              <span>Collect</span>
+              <span>{isPending('game.collect') ? 'Collecting…' : 'Collect'}</span>
             </button>
           </div>
 
@@ -1116,7 +1128,7 @@ export function App() {
         </section>
 
         {backofficeRole !== 'none' && (
-          <section className="panel panel--backoffice" id="backoffice">
+          <section className="panel panel--backoffice" id="backoffice" aria-busy={backofficeBusy}>
             <div className="panel__head">
               <h2>Backoffice</h2>
               <span className="panel__hint">{backofficeRole}</span>
@@ -1130,13 +1142,15 @@ export function App() {
                   <input value={backofficeQuery} onChange={(event) => setBackofficeQuery(event.target.value)} placeholder="UID, email, name" />
                 </div>
               </label>
-              <button className="btn btn--primary" type="button" onClick={searchBackofficeUsers}>Search</button>
+              <button className="btn btn--primary" type="button" onClick={() => void runPending('backoffice.search', searchBackofficeUsers)} disabled={backofficeBusy}>
+                {isPending('backoffice.search') ? 'Searching…' : 'Search'}
+              </button>
             </div>
 
             {backofficeUsers.length > 0 && (
               <div className="backoffice-users">
                 {backofficeUsers.map((item) => (
-                  <button className={`backoffice-user ${backofficeUser?.uid === item.uid ? 'is-selected' : ''}`} type="button" key={item.uid} onClick={() => void selectBackofficeUser(item)}>
+                  <button className={`backoffice-user ${backofficeUser?.uid === item.uid ? 'is-selected' : ''}`} type="button" key={item.uid} onClick={() => void runPending('backoffice.user', () => selectBackofficeUser(item))} disabled={backofficeBusy}>
                     <span>{item.name || item.email}</span>
                     <span className="label">UID {item.uid} · {item.email}</span>
                   </button>
@@ -1164,10 +1178,10 @@ export function App() {
                         <input value={backofficeAmount} onChange={(event) => setBackofficeAmount(Number(event.target.value || 0))} type="number" step="0.01" />
                       </label>
                       <div className="actions actions--operator">
-                        <button className="btn" type="button" onClick={() => void runBackofficeOperation('/backoffice/wallet/bonus', { uid: backofficeUser.uid, cid: clubId, amount: backofficeAmount }, 'Bonus granted')}>Bonus</button>
-                        <button className="btn" type="button" onClick={() => void runBackofficeOperation('/backoffice/wallet/adjust', { uid: backofficeUser.uid, cid: clubId, amount: backofficeAmount }, 'Balance adjusted')}>Adjust</button>
-                        <button className="btn" type="button" onClick={() => void runBackofficeOperation('/backoffice/users/status', { uid: backofficeUser.uid, blocked: !(backofficeUser.status & 4) }, backofficeUser.status & 4 ? 'User unblocked' : 'User blocked')}>
-                          {backofficeUser.status & 4 ? 'Unblock' : 'Block'}
+                        <button className="btn" type="button" disabled={backofficeBusy} onClick={() => void runPending('backoffice.mutate', () => runBackofficeOperation('/backoffice/wallet/bonus', { uid: backofficeUser.uid, cid: clubId, amount: backofficeAmount }, 'Bonus granted'))}>Bonus</button>
+                        <button className="btn" type="button" disabled={backofficeBusy} onClick={() => void runPending('backoffice.mutate', () => runBackofficeOperation('/backoffice/wallet/adjust', { uid: backofficeUser.uid, cid: clubId, amount: backofficeAmount }, 'Balance adjusted'))}>Adjust</button>
+                        <button className="btn" type="button" disabled={backofficeBusy} onClick={() => void runPending('backoffice.mutate', () => runBackofficeOperation('/backoffice/users/status', { uid: backofficeUser.uid, blocked: !(backofficeUser.status & 4) }, backofficeUser.status & 4 ? 'User unblocked' : 'User blocked'))}>
+                          {isPending('backoffice.mutate') ? 'Working…' : backofficeUser.status & 4 ? 'Unblock' : 'Block'}
                         </button>
                       </div>
                     </div>
@@ -1178,7 +1192,9 @@ export function App() {
                   <label className="field"><span>Game alias</span><input value={backofficeAlias} onChange={(event) => setBackofficeAlias(event.target.value)} placeholder="provider/game" /></label>
                   <label className="field"><span>From (UTC)</span><input value={backofficeFrom} onChange={(event) => setBackofficeFrom(event.target.value)} placeholder="2026-07-14T00:00:00Z" /></label>
                   <label className="field"><span>To (UTC)</span><input value={backofficeTo} onChange={(event) => setBackofficeTo(event.target.value)} placeholder="2026-07-14T23:59:59Z" /></label>
-                  <button className="btn" type="button" onClick={() => void selectBackofficeUser(backofficeUser)}>Filter sessions</button>
+                  <button className="btn" type="button" onClick={() => void runPending('backoffice.user', () => selectBackofficeUser(backofficeUser))} disabled={backofficeBusy}>
+                    {isPending('backoffice.user') ? 'Loading…' : 'Filter sessions'}
+                  </button>
                 </div>
 
                 <div className="backoffice-columns">

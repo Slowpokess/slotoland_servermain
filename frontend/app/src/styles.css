@@ -69,6 +69,15 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+[aria-busy="true"] {
+  transition: opacity 120ms ease;
+}
+
 .app-shell {
   min-height: 100vh;
   display: grid;

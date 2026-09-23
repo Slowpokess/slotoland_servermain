@@ -75,3 +75,32 @@
 ### Commit
 
 - Первый snapshot нового репозитория: ветка `main`; точный SHA фиксируется историей GitHub.
+
+---
+
+## 2026-09-23 — единая модель асинхронных действий
+
+### Выполнено
+
+- Рабочая директория переведена на новую ветку `slotoland-main`, связанную с `slotoland/main`.
+- Добавлен reusable hook `usePendingActions`.
+- Hook не допускает повторный параллельный запуск действия с одинаковым ключом.
+- Добавлены общие pending-группы для auth, gameplay и backoffice.
+- Sign-in, sign-up, refresh и смена пароля получили loading labels и disabled state.
+- Open game, spin, double и collect взаимно блокируются на время gameplay-запроса.
+- Backoffice search, user loading и изменяющие операции защищены от повторного запуска.
+- Интерактивные секции получили `aria-busy`.
+- Disabled controls получили единое визуальное состояние.
+
+### Проверки
+
+- `npm run typecheck` — успешно.
+- `npm run build` — успешно.
+
+### Следующий блок
+
+Разделить `App.tsx` на самостоятельные presentation-модули, начиная с Game и Activity, затем вынести Account/Lobby и Backoffice.
+
+### Commit
+
+- Заполняется историей Git после публикации этого среза.
