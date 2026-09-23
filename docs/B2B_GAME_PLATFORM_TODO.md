@@ -101,10 +101,10 @@ Definition of Done:
 
 ### P0.1.1. Зафиксировать чистую исходную точку
 
-- [ ] Разобрать существующие незакоммиченные изменения.
-- [ ] Разделить их на логические commits.
-- [ ] Проверить, что generated artifacts не попадают в commits.
-- [ ] Создать release branch или согласовать trunk-based workflow.
+- [x] Разобрать существующие незакоммиченные изменения и сохранить полный baseline отдельным root commit.
+- [x] Разделить последующие изменения на логические commits.
+- [x] Проверить, что generated artifacts, `.env`, caches, logs и binaries не попадают в commits.
+- [x] Принять `main` нового репозитория как trunk и вести локальную рабочую ветку `slotoland-main` с прямой публикацией законченных срезов.
 - [ ] Добавить PR template с security, migrations и API checklist.
 
 ### P0.1.2. Исправить текущие frontend-дефекты
@@ -126,9 +126,9 @@ Definition of Done:
 - [ ] Вынести catalog hooks/service.
 - [ ] Вынести game session hooks/service.
 - [ ] Вынести backoffice hooks/service.
-- [ ] Разделить Account, Lobby, Game и Backoffice components.
-- [ ] Добавить application router.
-- [ ] Отделить player routes от operator routes.
+- [x] Разделить Account, Lobby, Game, Activity, catalog helpers и Backoffice presentation components.
+- [x] Добавить минимальный pathname application router без новой runtime-зависимости.
+- [x] Отделить player route `/` от operator route `/backoffice`; поверхности больше не присутствуют в DOM одновременно.
 - [ ] Ввести единый query/cache слой или четкий собственный data layer.
 
 ### P1.1.4. Усилить HTTP baseline
@@ -147,7 +147,7 @@ Definition of Done:
 - [ ] Frontend typecheck и build проходят.
 - [x] Production frontend не содержит ссылок на отсутствующие обязательные assets.
 - [x] Пароль не пишется в browser storage.
-- [ ] Player и backoffice UI больше не находятся в одном компоненте.
+- [x] Player и backoffice presentation больше не находятся в одном компоненте.
 
 ## 6. Milestone 2 — B2B data model
 

@@ -319,6 +319,20 @@ button:disabled {
   align-items: start;
 }
 
+.workspace--backoffice {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.route-denied {
+  max-width: 640px;
+  padding-bottom: 18px;
+}
+
+.route-denied p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 .panel {
   background: linear-gradient(180deg, rgba(17, 25, 35, 0.98), rgba(13, 19, 27, 0.98));
   border: 1px solid var(--line);

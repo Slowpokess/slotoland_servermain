@@ -19,7 +19,7 @@
 
 - Направление: B2B Game Provider для social/free-play первого релиза.
 - Текущий milestone: `Milestone 1 — очистка текущего baseline`.
-- Текущий блок: стабилизация frontend baseline.
+- Текущий блок: route boundaries и вынос API orchestration в domain hooks/services.
 - Production deployment: не готов.
 - Real-money: вне scope первого релиза.
 
@@ -107,6 +107,39 @@
 
 ---
 
+## 2026-09-23 — завершение presentation-декомпозиции
+
+### Выполнено
+
+- Account presentation вынесен в отдельный typed-компонент `AccountPanel`.
+- Backoffice presentation вынесен в отдельный typed-компонент `BackofficePanel`.
+- Форматирование денежных значений вынесено в общий модуль `format`.
+- Ранее вынесенные `LobbyPanel`, `GamePanel` и `ActivityLedger` остаются независимыми presentation-компонентами.
+- `App.tsx` теперь отвечает преимущественно за state и API orchestration.
+- Размер `App.tsx` уменьшен с исходных 1210 до 880 строк.
+- В todo отмечено завершение разделения presentation-компонентов и фиксация чистого baseline.
+
+### Проверки
+
+- `npm run typecheck` — успешно.
+- `npm run build` — успешно.
+
+### Текущий архитектурный остаток
+
+- Account, catalog, gameplay и backoffice API orchestration пока находятся в `App.tsx`.
+- Player и operator presentation разделены компонентами, но еще используют один route shell.
+- Целевая browser-session authentication model пока не зафиксирована.
+
+### Следующий блок
+
+Добавить route-level player/operator boundaries, затем вынести domain hooks/services из `App.tsx`.
+
+### Commit
+
+- Заполняется историей Git после публикации этого среза.
+
+---
+
 ## 2026-09-23 — декомпозиция Lobby и каталога
 
 ### Выполнено
@@ -150,6 +183,35 @@
 ### Следующий блок
 
 Вынести Account и Lobby presentation, после чего отделить Backoffice и перейти к route-level boundaries.
+
+### Commit
+
+- Заполняется историей Git после публикации этого среза.
+
+---
+
+## 2026-09-23 — route-level разделение player и operator
+
+### Выполнено
+
+- Добавлен минимальный pathname router с typed routes `player` и `backoffice`.
+- Player product доступен на `/`.
+- Operator surface доступен на `/backoffice`.
+- Player и backoffice presentation больше не рендерятся одновременно.
+- Для пользователя без backoffice-роли отображается отдельный access-denied state.
+- Навигация между player и operator зонами использует самостоятельные URL.
+- Добавлен отдельный одно-колоночный backoffice layout.
+- Решение совместимо с существующим Nginx `try_files ... /index.html` fallback.
+
+### Проверки
+
+- `npm run typecheck` — успешно.
+- `npm run build` — успешно.
+- `go test ./...` — успешно.
+
+### Следующий блок
+
+Вынести auth, catalog, gameplay и backoffice orchestration из `App.tsx` в domain hooks/services и зафиксировать browser-session authentication ADR.
 
 ### Commit
 

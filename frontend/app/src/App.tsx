@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LogIn, RefreshCcw, RotateCcw, Search, ServerCog, Shield, UserPlus } from 'lucide-react';
+import { RefreshCcw, ServerCog, Shield } from 'lucide-react';
+import { AccountPanel } from '@/components/AccountPanel';
+import { BackofficePanel } from '@/components/BackofficePanel';
 import { GamePanel } from '@/components/GamePanel';
 import { LobbyPanel } from '@/components/LobbyPanel';
 import { requestJson, HttpError, normalizeBase } from '@/lib/api';
+import { formatMoney } from '@/lib/format';
 import { gameAlias, gameShape, gameTypeLabel, normalizeText, renderRtpLabel } from '@/lib/gameCatalog';
 import { loadJson, loadNumber, loadSessionString, loadString, removeString, saveJson, saveSessionString, saveString } from '@/lib/storage';
+import { resolveAppRoute } from '@/lib/routing';
 import { usePendingActions } from '@/lib/usePendingActions';
 import type { ApiRequestOptions } from '@/lib/api';
 import type { AuthResponse, BackofficeAuditEntry, BackofficeLedgerEntry, BackofficeRole, BackofficeSession, BackofficeUser, GameCatalogResponse, GameInfo, GameSession, PropResponse, SessionResponse, UserListResponse, WalletResponse } from '@/lib/types';
@@ -26,10 +30,6 @@ const STORAGE = {
 } as const;
 
 const LEGACY_SECRET_STORAGE_KEY = 'slotopol.secret';
-
-function formatMoney(value: number): string {
-  return Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 function normalizeScreen(screen: unknown): unknown[][] {
   if (!screen) return [];
@@ -677,6 +677,7 @@ export function App() {
   const authBusy = isPending('auth.signin', 'auth.signup', 'auth.refresh', 'auth.secret');
   const gameBusy = isPending('game.open', 'game.spin', 'game.double', 'game.collect');
   const backofficeBusy = isPending('backoffice.search', 'backoffice.user', 'backoffice.mutate');
+  const appRoute = resolveAppRoute(window.location.pathname);
 
   return (
     <div className="app-shell">
@@ -711,17 +712,26 @@ export function App() {
         </div>
 
         <nav className="section-nav" aria-label="Product sections">
-          <a href="#welcome" className="nav-pill">Welcome</a>
-          <a href="#profile" className="nav-pill">Profile</a>
-          <a href="#lobby" className="nav-pill">Lobby</a>
-          <a href="#game" className="nav-pill">Game</a>
-          <a href="#rewards" className="nav-pill">Rewards</a>
-          {backofficeRole !== 'none' && <a href="#backoffice" className="nav-pill nav-pill--accent">Backoffice</a>}
-          <a href="#activity" className="nav-pill">History</a>
+          {appRoute === 'player' ? (
+            <>
+              <a href="#welcome" className="nav-pill">Welcome</a>
+              <a href="#profile" className="nav-pill">Profile</a>
+              <a href="#lobby" className="nav-pill">Lobby</a>
+              <a href="#game" className="nav-pill">Game</a>
+              <a href="#rewards" className="nav-pill">Rewards</a>
+              <a href="#activity" className="nav-pill">History</a>
+              {backofficeRole !== 'none' && <a href="/backoffice" className="nav-pill nav-pill--accent">Backoffice</a>}
+            </>
+          ) : (
+            <>
+              <a href="/" className="nav-pill">Player product</a>
+              <span className="nav-pill nav-pill--accent" aria-current="page">Backoffice</span>
+            </>
+          )}
         </nav>
       </header>
 
-      <section className="hero" id="welcome">
+      {appRoute === 'player' && <section className="hero" id="welcome">
         <div className="hero__copy">
           <div className="hero__eyebrow">Client product</div>
           <h1>Slotopol</h1>
@@ -766,124 +776,40 @@ export function App() {
             </div>
           </article>
         </div>
-      </section>
+      </section>}
 
-      <main className="workspace">
-        <section className="panel panel--auth" id="profile" aria-busy={authBusy}>
-          <div className="panel__head">
-            <h2>Account</h2>
-            <span className="panel__hint">{accountHint}</span>
-          </div>
-
-          {import.meta.env.DEV && (
-            <label className="field">
-              <span>API base</span>
-              <input value={apiBase} onChange={(event) => setApiBase(event.target.value)} type="text" spellCheck={false} />
-            </label>
-          )}
-
-          <div className="split">
-            <label className="field">
-              <span>Email</span>
-              <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" spellCheck={false} autoComplete="username" />
-            </label>
-            <label className="field">
-              <span>Password</span>
-              <input value={secret} onChange={(event) => setSecret(event.target.value)} type="password" autoComplete="current-password" />
-            </label>
-          </div>
-
-          <div className="split">
-            <label className="field">
-              <span>Name</span>
-              <input value={name} onChange={(event) => setName(event.target.value)} type="text" spellCheck={false} autoComplete="nickname" />
-            </label>
-            <label className="field">
-              <span>Club</span>
-              <input value={clubId} onChange={(event) => setClubId(Math.max(1, Number(event.target.value || DEFAULT_CLUB)))} type="number" min={1} step={1} />
-            </label>
-          </div>
-
-          <div className="actions">
-            <button className="btn btn--primary" type="button" onClick={() => void runPending('auth.signin', signIn)} disabled={authBusy}>
-              <LogIn size={16} />
-              <span>{isPending('auth.signin') ? 'Signing in…' : 'Sign in'}</span>
-            </button>
-            <button className="btn" type="button" onClick={() => void runPending('auth.signup', signUp)} disabled={authBusy}>
-              <UserPlus size={16} />
-              <span>{isPending('auth.signup') ? 'Signing up…' : 'Sign up'}</span>
-            </button>
-            <button className="btn" type="button" onClick={() => void runPending('auth.refresh', refreshClick)} disabled={authBusy}>
-              <RotateCcw size={16} />
-              <span>{isPending('auth.refresh') ? 'Refreshing…' : 'Refresh'}</span>
-            </button>
-          </div>
-
-          <div className="account-card">
-            <div className="account-card__title">Profile</div>
-            <div className="account-card__grid">
-              <div>
-                <div className="label">UID</div>
-                <div className="value">{uid ?? '-'}</div>
-              </div>
-              <div>
-                <div className="label">Wallet</div>
-                <div className="value">{formatMoney(wallet)}</div>
-              </div>
-              <div>
-                <div className="label">Access</div>
-                <div className="value">{access}</div>
-              </div>
-              <div>
-                <div className="label">mRTP</div>
-                <div className="value">{mrtp}</div>
-              </div>
-              <div>
-                <div className="label">Access flags</div>
-                <div className="value">{accessFlags}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="status-strip">
-            <div className="status-strip__label">Eligibility</div>
-            <div className="status-strip__value">{accessSummary}</div>
-          </div>
-
-          <div className="secret-box">
-            <div className="secret-box__title">Recovery / change secret</div>
-            <div className="split">
-              <label className="field">
-                <span>Old secret</span>
-                <input value={secretOld} onChange={(event) => setSecretOld(event.target.value)} type="password" autoComplete="current-password" />
-              </label>
-              <label className="field">
-                <span>New secret</span>
-                <input value={secretNew} onChange={(event) => setSecretNew(event.target.value)} type="password" autoComplete="new-password" />
-              </label>
-            </div>
-            <div className="actions">
-              <button className="btn btn--primary" type="button" onClick={() => void runPending('auth.secret', changeSecret)} disabled={authBusy}>
-                <Shield size={16} />
-                <span>{isPending('auth.secret') ? 'Updating…' : 'Update secret'}</span>
-              </button>
-              <div className="mini-note">
-                The backend enforces the current secret unless the account has admin access.
-              </div>
-            </div>
-          </div>
-
-          <div className="mini-list">
-            {profileRows.map((row) => (
-              <div className="mini-item" key={row.label}>
-                <div className="mini-item__top">
-                  <div className="mini-item__name">{row.label}</div>
-                </div>
-                <div className="mini-item__meta">{row.value}</div>
-              </div>
-            ))}
-          </div>
-        </section>
+      <main className={`workspace ${appRoute === 'backoffice' ? 'workspace--backoffice' : ''}`}>
+        {appRoute === 'player' ? <>
+        <AccountPanel
+          access={access}
+          accessFlags={accessFlags}
+          accessSummary={accessSummary}
+          apiBase={apiBase}
+          clubId={clubId}
+          email={email}
+          hint={accountHint}
+          isDevelopment={import.meta.env.DEV}
+          mrtp={mrtp}
+          name={name}
+          pending={{ any: authBusy, refresh: isPending('auth.refresh'), secret: isPending('auth.secret'), signIn: isPending('auth.signin'), signUp: isPending('auth.signup') }}
+          profileRows={profileRows}
+          secret={secret}
+          secretNew={secretNew}
+          secretOld={secretOld}
+          uid={uid}
+          wallet={wallet}
+          onApiBaseChange={setApiBase}
+          onClubIdChange={setClubId}
+          onEmailChange={setEmail}
+          onNameChange={setName}
+          onRefresh={() => void runPending('auth.refresh', refreshClick)}
+          onSecretChange={setSecret}
+          onSecretNewChange={setSecretNew}
+          onSecretOldChange={setSecretOld}
+          onSignIn={() => void runPending('auth.signin', signIn)}
+          onSignUp={() => void runPending('auth.signup', signUp)}
+          onUpdateSecret={() => void runPending('auth.secret', changeSecret)}
+        />
 
         <LobbyPanel
           algorithmCount={algCount}
@@ -924,93 +850,40 @@ export function App() {
           onSelChange={setSel}
           onSpin={() => void runPending('game.spin', spin)}
         />
-
-        {backofficeRole !== 'none' && (
-          <section className="panel panel--backoffice" id="backoffice" aria-busy={backofficeBusy}>
-            <div className="panel__head">
-              <h2>Backoffice</h2>
-              <span className="panel__hint">{backofficeRole}</span>
-            </div>
-
-            <div className="search-row">
-              <label className="field field--inline">
-                <span>User search</span>
-                <div className="search-input">
-                  <Search size={15} />
-                  <input value={backofficeQuery} onChange={(event) => setBackofficeQuery(event.target.value)} placeholder="UID, email, name" />
-                </div>
-              </label>
-              <button className="btn btn--primary" type="button" onClick={() => void runPending('backoffice.search', searchBackofficeUsers)} disabled={backofficeBusy}>
-                {isPending('backoffice.search') ? 'Searching…' : 'Search'}
-              </button>
-            </div>
-
-            {backofficeUsers.length > 0 && (
-              <div className="backoffice-users">
-                {backofficeUsers.map((item) => (
-                  <button className={`backoffice-user ${backofficeUser?.uid === item.uid ? 'is-selected' : ''}`} type="button" key={item.uid} onClick={() => void runPending('backoffice.user', () => selectBackofficeUser(item))} disabled={backofficeBusy}>
-                    <span>{item.name || item.email}</span>
-                    <span className="label">UID {item.uid} · {item.email}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {backofficeUser ? (
-              <div className="backoffice-detail">
-                <div className="stats">
-                  <div className="stat"><div className="label">User</div><div className="value">{backofficeUser.name || backofficeUser.email}</div></div>
-                  <div className="stat"><div className="label">Wallet</div><div className="value">{formatMoney(backofficeUser.wallet || 0)}</div></div>
-                  <div className="stat"><div className="label">Status</div><div className="value">{backofficeUser.status & 4 ? 'Blocked' : 'Active'}</div></div>
-                </div>
-
-                {(backofficeRole === 'operator' || backofficeRole === 'admin') && (
-                  <div className="backoffice-actions">
-                    <label className="field">
-                      <span>Operator reason</span>
-                      <input value={backofficeReason} onChange={(event) => setBackofficeReason(event.target.value)} placeholder="Required for every action" />
-                    </label>
-                    <div className="split">
-                      <label className="field">
-                        <span>Amount</span>
-                        <input value={backofficeAmount} onChange={(event) => setBackofficeAmount(Number(event.target.value || 0))} type="number" step="0.01" />
-                      </label>
-                      <div className="actions actions--operator">
-                        <button className="btn" type="button" disabled={backofficeBusy} onClick={() => void runPending('backoffice.mutate', () => runBackofficeOperation('/backoffice/wallet/bonus', { uid: backofficeUser.uid, cid: clubId, amount: backofficeAmount }, 'Bonus granted'))}>Bonus</button>
-                        <button className="btn" type="button" disabled={backofficeBusy} onClick={() => void runPending('backoffice.mutate', () => runBackofficeOperation('/backoffice/wallet/adjust', { uid: backofficeUser.uid, cid: clubId, amount: backofficeAmount }, 'Balance adjusted'))}>Adjust</button>
-                        <button className="btn" type="button" disabled={backofficeBusy} onClick={() => void runPending('backoffice.mutate', () => runBackofficeOperation('/backoffice/users/status', { uid: backofficeUser.uid, blocked: !(backofficeUser.status & 4) }, backofficeUser.status & 4 ? 'User unblocked' : 'User blocked'))}>
-                          {isPending('backoffice.mutate') ? 'Working…' : backofficeUser.status & 4 ? 'Unblock' : 'Block'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="backoffice-session-filter">
-                  <label className="field"><span>Game alias</span><input value={backofficeAlias} onChange={(event) => setBackofficeAlias(event.target.value)} placeholder="provider/game" /></label>
-                  <label className="field"><span>From (UTC)</span><input value={backofficeFrom} onChange={(event) => setBackofficeFrom(event.target.value)} placeholder="2026-07-14T00:00:00Z" /></label>
-                  <label className="field"><span>To (UTC)</span><input value={backofficeTo} onChange={(event) => setBackofficeTo(event.target.value)} placeholder="2026-07-14T23:59:59Z" /></label>
-                  <button className="btn" type="button" onClick={() => void runPending('backoffice.user', () => selectBackofficeUser(backofficeUser))} disabled={backofficeBusy}>
-                    {isPending('backoffice.user') ? 'Loading…' : 'Filter sessions'}
-                  </button>
-                </div>
-
-                <div className="backoffice-columns">
-                  <div className="backoffice-list">
-                    <h3>Wallet ledger</h3>
-                    {backofficeLedger.length ? backofficeLedger.map((entry) => <div className="ledger-item" key={entry.id}><div className="ledger-item__top"><span>{entry.op}</span><span>{formatMoney(entry.amount)}</span></div><div className="ledger-item__meta">{entry.balance_before} → {entry.balance_after} · actor {entry.actor_uid}</div></div>) : <div className="empty-state">No ledger entries.</div>}
-                  </div>
-                  <div className="backoffice-list">
-                    <h3>Sessions</h3>
-                    {backofficeSessions.length ? backofficeSessions.map((entry) => <div className="ledger-item" key={entry.gid}><div className="ledger-item__top"><span>{entry.alias}</span><span>GID {entry.gid}</span></div><div className="ledger-item__meta">{entry.closed ? 'Closed' : 'Open'} · {entry.ctime}</div></div>) : <div className="empty-state">No sessions.</div>}
-                  </div>
-                  <div className="backoffice-list">
-                    <h3>Operator audit</h3>
-                    {backofficeAudit.length ? backofficeAudit.map((entry) => <div className="ledger-item" key={entry.id}><div className="ledger-item__top"><span>{entry.action}</span><span>actor {entry.actor_uid}</span></div><div className="ledger-item__meta">{entry.reason}</div></div>) : <div className="empty-state">No operator actions.</div>}
-                  </div>
-                </div>
-              </div>
-            ) : <div className="empty-state">Search for a user to open their support case.</div>}
+        </> : backofficeRole !== 'none' ? (
+          <BackofficePanel
+            alias={backofficeAlias}
+            amount={backofficeAmount}
+            audit={backofficeAudit}
+            busy={backofficeBusy}
+            clubId={clubId}
+            from={backofficeFrom}
+            ledger={backofficeLedger}
+            loadingUser={isPending('backoffice.user')}
+            mutating={isPending('backoffice.mutate')}
+            query={backofficeQuery}
+            reason={backofficeReason}
+            role={backofficeRole}
+            searching={isPending('backoffice.search')}
+            selectedUser={backofficeUser}
+            sessions={backofficeSessions}
+            to={backofficeTo}
+            users={backofficeUsers}
+            onAliasChange={setBackofficeAlias}
+            onAmountChange={setBackofficeAmount}
+            onFromChange={setBackofficeFrom}
+            onLoadUser={(user) => void runPending('backoffice.user', () => selectBackofficeUser(user))}
+            onMutate={(path, body, title) => void runPending('backoffice.mutate', () => runBackofficeOperation(path, body, title))}
+            onQueryChange={setBackofficeQuery}
+            onReasonChange={setBackofficeReason}
+            onSearch={() => void runPending('backoffice.search', searchBackofficeUsers)}
+            onToChange={setBackofficeTo}
+          />
+        ) : (
+          <section className="panel route-denied" role="alert">
+            <div className="panel__head"><h2>Backoffice access required</h2></div>
+            <p>Sign in from the player product with a support, operator, or admin account, then return to this route.</p>
+            <a className="nav-pill nav-pill--accent" href="/#profile">Open account sign-in</a>
           </section>
         )}
       </main>
