@@ -10,8 +10,17 @@ import { gameAlias, gameShape, gameTypeLabel, normalizeText, renderRtpLabel } fr
 import { loadJson, loadNumber, loadSessionString, loadString, removeString, saveJson, saveSessionString, saveString } from '@/lib/storage';
 import { resolveAppRoute } from '@/lib/routing';
 import { usePendingActions } from '@/lib/usePendingActions';
+import { changeAccountSecret, loadAccountSnapshot, refreshSession, signInAccount, signUpAccount } from '@/services/authApi';
+import {
+  loadBackofficeRole as fetchBackofficeRole,
+  loadBackofficeUserSnapshot,
+  runBackofficeOperation as mutateBackoffice,
+  searchBackofficeUsers as findBackofficeUsers,
+} from '@/services/backofficeApi';
+import { loadGameCatalog } from '@/services/catalogApi';
+import { collectGame, doubleGame, openGame, spinGame } from '@/services/gameplayApi';
 import type { ApiRequestOptions } from '@/lib/api';
-import type { AuthResponse, BackofficeAuditEntry, BackofficeLedgerEntry, BackofficeRole, BackofficeSession, BackofficeUser, GameCatalogResponse, GameInfo, GameSession, PropResponse, SessionResponse, UserListResponse, WalletResponse } from '@/lib/types';
+import type { AuthResponse, BackofficeAuditEntry, BackofficeLedgerEntry, BackofficeRole, BackofficeSession, BackofficeUser, GameInfo, GameSession, SessionResponse } from '@/lib/types';
 import type { ActivityItem } from '@/lib/types';
 
 const DEFAULT_API = import.meta.env.DEV ? 'http://localhost:8080' : window.location.origin;
@@ -238,10 +247,7 @@ export function App() {
     }
 
     try {
-      const payload = await requestRaw<AuthResponse>('/refresh', {
-        method: 'GET',
-        tokenType: 'refresh',
-      });
+      const payload = await refreshSession(requestRaw);
       applyAuth(payload);
       if (!silent) addActivity('auth', 'Session refreshed', payload.email || email, 'success');
       return true;
@@ -280,8 +286,7 @@ export function App() {
       return;
     }
     try {
-      const payload = await requestApi<{ role?: BackofficeRole }>('/backoffice/me');
-      setBackofficeRole(payload.role || 'none');
+      setBackofficeRole(await fetchBackofficeRole(requestApi));
     } catch (error) {
       if (isHttpError(error) && (error.status === 401 || error.status === 403)) {
         setBackofficeRole('none');
@@ -292,26 +297,21 @@ export function App() {
   }, [addActivity, requestApi]);
 
   const loadBackofficeUser = useCallback(async (targetUid: number) => {
-    const [detail, ledger, sessions, audit] = await Promise.all([
-      requestApi<BackofficeUser>('/backoffice/users/get', { method: 'POST', body: { uid: targetUid, cid: clubId } }),
-      requestApi<{ list?: BackofficeLedgerEntry[] }>('/backoffice/wallet/ledger', { method: 'POST', body: { uid: targetUid, cid: clubId } }),
-      requestApi<{ list?: BackofficeSession[] }>('/backoffice/sessions/list', {
-        method: 'POST', body: { uid: targetUid, cid: clubId, alias: backofficeAlias, from: backofficeFrom, to: backofficeTo },
-      }),
-      requestApi<{ list?: BackofficeAuditEntry[] }>('/backoffice/audit/list', { method: 'POST', body: { uid: targetUid } }),
-    ]);
-    setBackofficeUser(detail);
-    setBackofficeLedger(ledger.list || []);
-    setBackofficeSessions(sessions.list || []);
-    setBackofficeAudit(audit.list || []);
+    const snapshot = await loadBackofficeUserSnapshot(requestApi, targetUid, {
+      cid: clubId,
+      alias: backofficeAlias,
+      from: backofficeFrom,
+      to: backofficeTo,
+    });
+    setBackofficeUser(snapshot.user);
+    setBackofficeLedger(snapshot.ledger);
+    setBackofficeSessions(snapshot.sessions);
+    setBackofficeAudit(snapshot.audit);
   }, [backofficeAlias, backofficeFrom, backofficeTo, clubId, requestApi]);
 
   const searchBackofficeUsers = useCallback(async () => {
     try {
-      const payload = await requestApi<{ list?: BackofficeUser[] }>('/backoffice/users/search', {
-        method: 'POST', body: { query: backofficeQuery, limit: 20 },
-      });
-      const list = payload.list || [];
+      const list = await findBackofficeUsers(requestApi, backofficeQuery);
       setBackofficeUsers(list);
       if (list.length === 1) await loadBackofficeUser(list[0].uid);
     } catch (error) {
@@ -334,7 +334,7 @@ export function App() {
       return;
     }
     try {
-      await requestApi(path, { method: 'POST', body: { ...body, reason: backofficeReason.trim() } });
+      await mutateBackoffice(requestApi, path, body, backofficeReason.trim());
       await loadBackofficeUser(backofficeUser.uid);
       setBackofficeReason('');
       addActivity('backoffice', title, `User ${backofficeUser.uid}`, 'success');
@@ -372,35 +372,14 @@ export function App() {
     }
 
     try {
-      const [userInfo, propInfo, walletInfo, alInfo] = await Promise.all([
-        requestApi<UserListResponse>('/user/is', {
-          method: 'POST',
-          body: { list: [{ uid: targetUid }] },
-        }),
-        requestApi<PropResponse>('/prop/get', {
-          method: 'POST',
-          body: { cid: clubId, uid: targetUid },
-        }),
-        requestApi<WalletResponse>('/prop/wallet/get', {
-          method: 'POST',
-          body: { cid: clubId, uid: targetUid },
-        }),
-        requestApi<{ access?: string | number }>('/prop/al/get', {
-          method: 'POST',
-          body: { cid: clubId, uid: targetUid, all: true },
-        }),
-      ]);
+      const snapshot = await loadAccountSnapshot(requestApi, targetUid, clubId);
 
-      const user = userInfo.list?.[0] || {};
-      const nextWallet = Number(walletInfo.wallet ?? propInfo.wallet ?? 0);
-      const nextFlags = alInfo.access ?? propInfo.access ?? '-';
-
-      setWallet(nextWallet);
-      setAccess(String(propInfo.access ?? '-'));
-      setMrtp(String(propInfo.mrtp ?? '-'));
-      setAccessFlags(String(nextFlags));
-      setAccountHint(user.name || name || email);
-      setAuthLabel(`UID ${targetUid} · ${user.name || email}`);
+      setWallet(snapshot.wallet);
+      setAccess(String(snapshot.access));
+      setMrtp(String(snapshot.mrtp));
+      setAccessFlags(String(snapshot.accessFlags));
+      setAccountHint(snapshot.user.name || name || email);
+      setAuthLabel(`UID ${targetUid} · ${snapshot.user.name || email}`);
     } catch (error) {
       addActivity('error', 'Account hydrate failed', errorMessage(error), 'error');
       if (isHttpError(error) && error.status === 401) {
@@ -411,7 +390,7 @@ export function App() {
 
   const loadGames = useCallback(async () => {
     try {
-      const payload = await requestApi<GameCatalogResponse>('/game/list?inc=all&sort=1', { auth: false });
+      const payload = await loadGameCatalog(requestApi);
       const list: GameInfo[] = Array.isArray(payload.list) ? payload.list : [];
       setGames(list);
       setAlgCount(String(payload.algnum ?? '-'));
@@ -459,10 +438,7 @@ export function App() {
     }
 
     try {
-      const payload = await requestApi<SessionResponse>('/game/new', {
-        method: 'POST',
-        body: { cid: clubId, uid, alias: selectedAlias },
-      });
+      const payload = await openGame(requestApi, { cid: clubId, uid, alias: selectedAlias });
 
       const nextSession: GameSession = {
         gid: Number(payload.gid || payload.sid || 0),
@@ -511,11 +487,11 @@ export function App() {
     }
 
     try {
-      const payload = await requestApi<SessionResponse>(kenoSession ? '/keno/spin' : '/slot/spin', {
-        method: 'POST',
-        body: kenoSession
-          ? { gid: currentSession.gid, bet, sel: picks }
-          : { gid: currentSession.gid, bet, sel },
+      const payload = await spinGame(requestApi, {
+        gid: currentSession.gid,
+        bet,
+        selection: kenoSession ? picks : sel,
+        gameType: kenoSession ? 'keno' : 'slot',
       });
       applySpinResult(payload);
       addActivity('spin', `Spin #${payload.sid || '?'}`, `${formatMoney(payload.wallet ?? wallet)} · ${payload.state || ''}`, 'success');
@@ -535,13 +511,7 @@ export function App() {
     }
 
     try {
-      const payload = await requestApi<SessionResponse>('/slot/doubleup', {
-        method: 'POST',
-        body: {
-          gid: currentSession.gid,
-          mult,
-        },
-      });
+      const payload = await doubleGame(requestApi, currentSession.gid, mult);
       applySpinResult(payload);
       addActivity('game', 'Double up', `${formatMoney(payload.wallet ?? wallet)} · ${payload.state || ''}`, 'success');
     } catch (error) {
@@ -560,10 +530,7 @@ export function App() {
     }
 
     try {
-      const payload = await requestApi<SessionResponse>('/slot/collect', {
-        method: 'POST',
-        body: { gid: currentSession.gid },
-      });
+      const payload = await collectGame(requestApi, currentSession.gid);
       applySpinResult(payload);
       addActivity('game', 'Collect', `${formatMoney(payload.wallet ?? wallet)} · ${payload.state || ''}`, 'success');
     } catch (error) {
@@ -573,14 +540,7 @@ export function App() {
 
   const signIn = useCallback(async () => {
     try {
-      const payload = await requestApi<AuthResponse>('/signin', {
-        method: 'POST',
-        auth: false,
-        body: {
-          email,
-          secret,
-        },
-      });
+      const payload = await signInAccount(requestApi, email, secret);
       applyAuth(payload);
       addActivity('auth', 'Signed in', payload.email || email, 'success');
       await hydrateAccount(Number(payload.uid || uid || 0) || null, payload.access || accessToken);
@@ -592,15 +552,7 @@ export function App() {
 
   const signUp = useCallback(async () => {
     try {
-      const payload = await requestApi<{ email?: string }>('/signup', {
-        method: 'POST',
-        auth: false,
-        body: {
-          email,
-          secret,
-          name,
-        },
-      });
+      const payload = await signUpAccount(requestApi, email, secret, name);
       addActivity('auth', 'Signed up', payload.email || email, 'success');
       await signIn();
     } catch (error) {
@@ -623,14 +575,7 @@ export function App() {
     }
 
     try {
-      await requestApi('/user/secret', {
-        method: 'POST',
-        body: {
-          uid,
-          oldsecret: secretOld,
-          newsecret: secretNew,
-        },
-      });
+      await changeAccountSecret(requestApi, uid, secretOld, secretNew);
       setSecret(secretNew);
       setSecretOld('');
       setSecretNew('');

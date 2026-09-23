@@ -22,6 +22,8 @@ export interface ApiTokens {
   refreshToken: string;
 }
 
+export type ApiRequester = <T>(path: string, options?: ApiRequestOptions) => Promise<T>;
+
 export function normalizeBase(value: string): string {
   return String(value || '').replace(/\/+$/, '');
 }

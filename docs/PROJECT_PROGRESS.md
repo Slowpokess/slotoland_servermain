@@ -19,7 +19,7 @@
 
 - Направление: B2B Game Provider для social/free-play первого релиза.
 - Текущий milestone: `Milestone 1 — очистка текущего baseline`.
-- Текущий блок: route boundaries и вынос API orchestration в domain hooks/services.
+- Текущий блок: domain services завершены; следующий блок — backend browser-session storage model.
 - Production deployment: не готов.
 - Real-money: вне scope первого релиза.
 - Browser authentication target: принят ADR 0001; backend implementation еще не начата.
@@ -233,6 +233,39 @@
 ### Следующий блок
 
 Вынести auth orchestration в отдельный domain hook/service, не расширяя зависимость от временного token storage; затем спроектировать backend browser-session storage model.
+
+### Commit
+
+- Заполняется историей Git после публикации этого среза.
+
+---
+
+## 2026-09-23 — frontend domain API services
+
+### Выполнено
+
+- Добавлен единый typed-контракт `ApiRequester` между transport и domain слоями.
+- Auth/account orchestration вынесена в `authApi`: sign-in, sign-up, refresh, смена секрета и загрузка account snapshot.
+- Загрузка каталога вынесена в `catalogApi`.
+- Открытие игровой сессии, slot/keno spin, double-up и collect вынесены в `gameplayApi`.
+- Backoffice role, поиск пользователя, агрегированная загрузка detail/ledger/sessions/audit и operator mutations вынесены в `backofficeApi`.
+- `App.tsx` больше не знает endpoint paths доменов auth, account, catalog, gameplay и backoffice; в нем сохранены UI orchestration, token refresh retry и system health-check.
+- Поведение и существующие HTTP-контракты не изменялись.
+
+### Проверки
+
+- `npm run typecheck` — успешно.
+- `npm run build` — успешно.
+- `go test ./...` — успешно.
+
+### Известные ограничения
+
+- Frontend unit/component tests пока отсутствуют; сервисный срез проверяется TypeScript и production build.
+- Bearer access/refresh tokens остаются переходным механизмом до реализации ADR 0001.
+
+### Следующий блок
+
+Спроектировать и реализовать backend-модель server-managed browser sessions с HttpOnly cookie и CSRF/origin protection, сохранив отдельный authentication контур будущего Partner API.
 
 ### Commit
 

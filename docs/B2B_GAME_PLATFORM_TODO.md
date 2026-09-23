@@ -122,10 +122,10 @@ Definition of Done:
 
 ### P0.1.3. Разделить текущий React-монолит
 
-- [ ] Вынести auth hooks/service.
-- [ ] Вынести catalog hooks/service.
-- [ ] Вынести game session hooks/service.
-- [ ] Вынести backoffice hooks/service.
+- [x] Вынести auth hooks/service.
+- [x] Вынести catalog hooks/service.
+- [x] Вынести game session hooks/service.
+- [x] Вынести backoffice hooks/service.
 - [x] Разделить Account, Lobby, Game, Activity, catalog helpers и Backoffice presentation components.
 - [x] Добавить минимальный pathname application router без новой runtime-зависимости.
 - [x] Отделить player route `/` от operator route `/backoffice`; поверхности больше не присутствуют в DOM одновременно.
