@@ -131,6 +131,18 @@ Definition of Done:
 - [x] Отделить player route `/` от operator route `/backoffice`; поверхности больше не присутствуют в DOM одновременно.
 - [ ] Ввести единый query/cache слой или четкий собственный data layer.
 
+### P0.1.4. Перевести browser authentication на server sessions
+
+- [x] Добавить persistent `browser_session` storage model и PostgreSQL migration.
+- [x] Хранить только SHA-256 fingerprints session и CSRF secrets.
+- [x] Реализовать expiry, точечный revoke, revoke-all для пользователя и cleanup primitives.
+- [x] Отзывать sessions при анонимизации пользователя и удалять при hard-delete.
+- [ ] Добавить browser sign-in, session check/refresh и logout endpoints.
+- [ ] Передавать session ID только в `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/` cookie.
+- [ ] Добавить CSRF token и same-origin validation для изменяющих cookie-auth запросов.
+- [ ] Отзывать активные sessions при смене пароля и блокировке account.
+- [ ] Перевести player/backoffice frontend на cookie flow и удалить account JWT из browser storage.
+
 ### P1.1.4. Усилить HTTP baseline
 
 - [ ] Добавить rate limiting policy.

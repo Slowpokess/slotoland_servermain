@@ -167,7 +167,7 @@ func InitStorage() (err error) {
 	if Cfg.AutoSync {
 		if err = session.Sync(
 			&api.ClubData{}, &api.User{}, &api.Props{},
-			&api.Story{}, api.Walletlog{}, api.WalletLedgerEntry{}, api.BackofficeAuditEntry{}, api.Banklog{},
+			&api.Story{}, api.Walletlog{}, api.WalletLedgerEntry{}, api.BackofficeAuditEntry{}, api.BrowserSession{}, api.Banklog{},
 		); err != nil {
 			return
 		}

@@ -19,7 +19,7 @@
 
 - Направление: B2B Game Provider для social/free-play первого релиза.
 - Текущий milestone: `Milestone 1 — очистка текущего baseline`.
-- Текущий блок: domain services завершены; следующий блок — backend browser-session storage model.
+- Текущий блок: browser-session storage готов; следующий блок — cookie endpoints и CSRF middleware.
 - Production deployment: не готов.
 - Real-money: вне scope первого релиза.
 - Browser authentication target: принят ADR 0001; backend implementation еще не начата.
@@ -266,6 +266,40 @@
 ### Следующий блок
 
 Спроектировать и реализовать backend-модель server-managed browser sessions с HttpOnly cookie и CSRF/origin protection, сохранив отдельный authentication контур будущего Partner API.
+
+### Commit
+
+- Заполняется историей Git после публикации этого среза.
+
+---
+
+## 2026-09-24 — persistent browser-session storage
+
+### Выполнено
+
+- Добавлена отдельная server-side модель `browser_session` для same-origin player/backoffice authentication.
+- Session и CSRF secrets генерируются через `crypto/rand`; в базе сохраняются только SHA-256 fingerprints.
+- Реализованы создание, lookup с проверкой expiry/revoke, constant-time CSRF validation, точечный revoke, revoke-all для пользователя и cleanup.
+- Добавлена PostgreSQL migration `0003_browser_sessions.sql` с индексами и foreign key на пользователя.
+- Модель подключена к SQLite dev/demo auto-sync.
+- Анонимизация пользователя отзывает все browser sessions в той же транзакции; hard-delete сначала удаляет связанные sessions.
+- Добавлены lifecycle tests для hash-at-rest, CSRF, expiry, revoke, revoke-all и cleanup.
+
+### Проверки
+
+- Targeted browser-session и cleanup tests — успешно.
+- `go test ./...` — успешно.
+- `git diff --check` — успешно.
+
+### Известные ограничения
+
+- HTTP cookie endpoints и cookie-aware middleware еще не подключены.
+- Текущий React-клиент продолжает использовать переходный bearer JWT flow.
+- CSRF/origin enforcement будет добавлен вместе с cookie-auth transport, чтобы не создать частично защищенный публичный маршрут.
+
+### Следующий блок
+
+Добавить browser sign-in/session/logout endpoints, HttpOnly cookie transport и CSRF/origin middleware с сохранением bearer JWT compatibility для CLI и существующих tests.
 
 ### Commit
 

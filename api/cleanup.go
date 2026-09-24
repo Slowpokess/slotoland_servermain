@@ -15,6 +15,9 @@ func DeleteUserRecords(session *Session, uid uint64) (err error) {
 	if ledgerCount != 0 {
 		return fmt.Errorf("can not hard-delete user %d with %d wallet ledger record(s); anonymize the account instead", uid, ledgerCount)
 	}
+	if _, err = session.Where("uid=?", uid).Delete(&BrowserSession{}); err != nil {
+		return
+	}
 	if _, err = session.Where("uid=?", uid).Delete(&Story{}); err != nil {
 		return
 	}
@@ -28,6 +31,9 @@ func DeleteUserRecords(session *Session, uid uint64) (err error) {
 // AnonymizeUserRecords removes direct account data while retaining the user
 // row as the stable foreign-key target for immutable financial history.
 func AnonymizeUserRecords(session *Session, uid uint64) (err error) {
+	if _, err = revokeBrowserSessionsForUser(session, uid, time.Now()); err != nil {
+		return
+	}
 	if _, err = session.Where("uid=?", uid).Delete(&Story{}); err != nil {
 		return
 	}

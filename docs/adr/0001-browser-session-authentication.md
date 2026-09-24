@@ -67,7 +67,7 @@ Partner API не является browser API и должен использов
 
 ## Критерии реализации
 
-- [ ] Добавлена storage model browser sessions.
+- [x] Добавлена storage model browser sessions.
 - [ ] Реализованы sign-in, session refresh/check и logout через HttpOnly cookie.
 - [ ] Реализована CSRF/origin защита изменяющих browser endpoints.
 - [ ] Account block/password change инвалидируют активные sessions.
